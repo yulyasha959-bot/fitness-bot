@@ -1,11 +1,8 @@
+import os, json, tempfile
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    MessageHandler,
-    filters,
-    ContextTypes,
-    JobQueue,
+    ApplicationBuilder, CommandHandler, MessageHandler,
+    filters, ContextTypes,
 )
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -21,7 +18,17 @@ scope = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive",
 ]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+
+google_creds_json = os.environ.get("GOOGLE_CREDENTIALS")
+if google_creds_json:
+    creds_dict = json.loads(google_creds_json)
+    tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+    json.dump(creds_dict, tmp)
+    tmp.close()
+    creds = ServiceAccountCredentials.from_json_keyfile_name(tmp.name, scope)
+else:
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+
 client = gspread.authorize(creds)
 spreadsheet = client.open("Fitness Tracker")
 
@@ -144,19 +151,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "🍽 Харчування":
         context.user_data["state"] = None
         await update.message.reply_text("Обери блок:", reply_markup=food_keyboard)
-
     elif text == "🚶 Кроки":
         context.user_data["state"] = "waiting_steps"
         await update.message.reply_text("Введи кількість кроків:")
-
     elif text == "⚖️ Вага":
         context.user_data["state"] = "waiting_weight"
         await update.message.reply_text("Введи свою вагу (кг), наприклад: 65.5")
-
     elif text == "📏 Заміри":
         context.user_data["state"] = None
         await update.message.reply_text("Обери тип заміру:", reply_markup=measure_keyboard)
-
     elif text == "📊 Сьогодні":
         context.user_data["state"] = None
         nutrition_text = build_today_nutrition()
@@ -167,38 +170,30 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         today_w = [r[1] for r in w_records if len(r) > 1 and r[0] == today_str()]
         weight_text = f"\n⚖️ Вага: {today_w[-1] + ' кг' if today_w else '—'}"
         await update.message.reply_text(nutrition_text + steps_text + weight_text, reply_markup=main_keyboard)
-
     elif text == "📈 Аналітика":
         context.user_data["state"] = None
         await update.message.reply_text("Оберіть звіт:", reply_markup=analytics_keyboard)
-
     elif text == "📈 Графік ваги":
         await send_weight_chart(update, context)
-
     elif text == "📊 Тижнева аналітика":
         await send_weekly_report(update, context)
-
     elif text == "🔥 Стрік":
         streak = calc_streak()
         emoji = "🔥" * min(streak, 7)
         await update.message.reply_text(
             f"🔥 Твій стрік: {streak} {'день' if streak == 1 else 'днів'} поспіль!\n{emoji}"
         )
-
     elif text in daily_goals:
         nutrition_sheet.append_row([today_str(), text])
         progress_text = build_today_nutrition()
         await update.message.reply_text(f"✅ {text} додано\n\n{progress_text}")
-
     elif text in MEASURE_TYPES:
         context.user_data["state"] = "waiting_measure"
         context.user_data["measure_type"] = text
         await update.message.reply_text(f"Введи значення для «{text}» у сантиметрах, наприклад: 38")
-
     elif text == "⬅️ Назад":
         context.user_data["state"] = None
         await update.message.reply_text("Головне меню", reply_markup=main_keyboard)
-
     elif state == "waiting_steps":
         if text.isdigit():
             steps_sheet.append_row([today_str(), text])
@@ -206,7 +201,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"🚶 Збережено: {text} кроків", reply_markup=main_keyboard)
         else:
             await update.message.reply_text("Введи ціле число кроків, наприклад: 8500")
-
     elif state == "waiting_weight":
         try:
             val = float(text.replace(",", "."))
@@ -215,7 +209,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"⚖️ Вага {val} кг збережена!", reply_markup=main_keyboard)
         except ValueError:
             await update.message.reply_text("Введи число, наприклад: 65.5")
-
     elif state == "waiting_measure":
         try:
             val = float(text.replace(",", "."))
@@ -225,7 +218,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"📏 {m_type}: {val} см збережено!", reply_markup=main_keyboard)
         except ValueError:
             await update.message.reply_text("Введи число сантиметрів, наприклад: 38")
-
     else:
         await update.message.reply_text(f"Записано: {text}", reply_markup=main_keyboard)
 
