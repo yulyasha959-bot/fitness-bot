@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fitness Tracker</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #222222;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --accent: #c8f060;
+    --accent2: #60d4f0;
+    --accent3: #f06060;
+    --orange: #f0a060;
+    --purple: #a060f0;
+    --pink: #f060c0;
+    --teal: #60f0c0;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-bottom: 80px;
+  }
+
+  /* NAV */
+  .nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 4px;
+    border: none;
+    background: none;
+    color: var(--text3);
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .2s;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 22px; height: 22px; }
+
+  /* PAGES */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* HEADER */
+  .page-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+  }
+
+  /* PROGRESS RING */
+  .ring-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ring-info h3 { font-size: 13px; color: var(--text2); font-weight: 500; margin-bottom: 4px; }
+  .ring-info .big-num { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+  .ring-info .sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .ring-info .bar-wrap { margin-top: 10px; height: 4px; background: var(--border); border-radius: 2px; width: 180px; }
+  .ring-info .bar-fill { height: 4px; border-radius: 2px; background: var(--accent); transition: width .5s ease; }
+
+  svg.ring { width: 72px; height: 72px; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
+  .ring-fg { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
+  .ring-text { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 13px; fill: var(--text); }
+
+  /* CATEGORY BADGE */
+  .cat-badge {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* FOOD ITEM */
+  .food-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .15s;
+    border-radius: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin: 0 -8px;
+  }
+  .food-item:last-child { border-bottom: none; }
+  .food-item:active { background: var(--surface2); }
+  .food-item.selected { background: rgba(200,240,96,0.08); border-color: rgba(200,240,96,0.2); }
+  .food-item.half-selected { background: rgba(200,240,96,0.04); border-color: rgba(200,240,96,0.1); }
+
+  .food-info { flex: 1; }
+  .food-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .food-meta { font-size: 11px; color: var(--text2); }
+
+  .portion-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1.5px dashed var(--accent);
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .portion-badge.half { border-color: var(--text3); color: var(--text3); }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 20px 0 10px;
+  }
+
+  /* MEAL ROW */
+  .meal-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: border-color .2s;
+  }
+  .meal-row:active { border-color: var(--accent); }
+  .meal-num {
+    width: 32px; height: 32px;
+    background: var(--surface2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+    color: var(--text2);
+  }
+  .meal-text { flex: 1; }
+  .meal-text h4 { font-size: 14px; font-weight: 600; }
+  .meal-text p { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .chevron { color: var(--text3); font-size: 18px; }
+
+  /* BACK BUTTON */
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: none;
+    color: var(--text2); font-family: 'Manrope', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; margin-bottom: 16px;
+    padding: 4px 0;
+  }
+
+  /* INPUT */
+  .input-wrap { margin-bottom: 16px; }
+  .input-label { font-size: 12px; color: var(--text2); font-weight: 600; margin-bottom: 6px; }
+  .input-field {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .input-field:focus { border-color: var(--accent); }
+
+  /* BUTTON */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn-primary { background: var(--accent); color: #111; }
+  .btn-secondary { background: var(--surface2); color: var(--text); margin-top: 8px; }
+
+  /* MEASURE ROW */
+  .measure-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .measure-row:active { border-color: var(--accent2); }
+  .measure-left { display: flex; align-items: center; gap: 12px; }
+  .measure-icon { font-size: 20px; }
+  .measure-name { font-size: 14px; font-weight: 600; }
+  .measure-val { font-size: 14px; font-weight: 700; color: var(--text2); }
+
+  /* SEARCH */
+  .search-wrap { position: relative; margin-bottom: 16px; }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 16px; }
+  .search-field {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px 12px 42px;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  .search-field:focus { border-color: var(--accent); }
+  .search-field::placeholder { color: var(--text3); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 13px; font-weight: 600;
+    opacity: 0; transition: all .3s;
+    pointer-events: none; white-space: nowrap;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* HISTORY LIST */
+  .hist-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .hist-row:last-child { border-bottom: none; }
+  .hist-date { color: var(--text2); }
+  .hist-val { font-weight: 700; }
+
+  /* STEPS DISPLAY */
+  .steps-big { font-size: 56px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
+  .steps-goal { font-size: 13px; color: var(--text2); margin-top: 6px; }
+
+  /* COLOR UTILS */
+  .c-accent { color: var(--accent); }
+  .c-accent2 { color: var(--accent2); }
+  .c-orange { color: var(--orange); }
+  .c-purple { color: var(--purple); }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- PAGES -->
+<div id="page-home" class="page active">
+  <div class="page-title">Головна 👋</div>
+  <div id="home-content"></div>
+</div>
+
+<div id="page-ration" class="page">
+  <div id="ration-content"></div>
+</div>
+
+<div id="page-steps" class="page">
+  <div class="page-title">Кроки</div>
+  <div id="steps-content"></div>
+</div>
+
+<div id="page-measures" class="page">
+  <div class="page-title">Заміри</div>
+  <div id="measures-content"></div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Головна
+  </button>
+  <button class="nav-btn" onclick="showPage('ration')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+    Раціон
+  </button>
+  <button class="nav-btn" onclick="showPage('steps')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Кроки
+  </button>
+  <button class="nav-btn" onclick="showPage('measures')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Заміри
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const CATEGORIES = {
+  А: { color: '#5b8af0', bg: 'rgba(91,138,240,0.15)', label: 'А', name: 'Вуглеводи 1', items: [
+    { name: 'Лаваш', weight: 45, kcal: 110, prot: 3 },
+    { name: 'Картопля', weight: 100, kcal: 110, prot: 2 },
+    { name: 'Хліб цільнозерновий', weight: 50, kcal: 110, prot: 3 },
+    { name: 'Хлібці', weight: 45, kcal: 110, prot: 3 },
+    { name: 'Будь-яка крупа', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Рис (не шліфований)', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Цільнозернове борошно', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Бобові', weight: 30, kcal: 110, prot: 8 },
+    { name: 'Кукурудза свіжа', weight: 100, kcal: 110, prot: 3 },
+  ]},
+  Б: { color: '#d95f5f', bg: 'rgba(217,95,95,0.15)', label: 'Б', name: 'Молочне 1', items: [
+    { name: 'Йогурт несолодкий 1%', weight: 125, kcal: 65, prot: 4 },
+    { name: 'Сир кисломолочний 0.2%', weight: 70, kcal: 65, prot: 12 },
+    { name: 'Сири м\'які, тверді, плавлені', weight: 17, kcal: 65, prot: 4 },
+    { name: 'Кефір 1%', weight: 135, kcal: 65, prot: 4 },
+    { name: 'Молоко 1%', weight: 140, kcal: 65, prot: 4 },
+    { name: 'Сметана 15%', weight: 30, kcal: 65, prot: 1 },
+  ]},
+  В: { color: '#f0f0f0', bg: 'rgba(240,240,240,0.1)', label: 'В', name: 'Будь-що', items: [
+    { name: 'Будь-що (солодощі, снеки тощо)', weight: 90, kcal: 200, prot: 3 },
+  ]},
+  Г: { color: '#d4a017', bg: 'rgba(212,160,23,0.15)', label: 'Г', name: 'Вуглеводи 2', items: [
+    { name: 'Лаваш', weight: 45, kcal: 110, prot: 3 },
+    { name: 'Картопля', weight: 100, kcal: 110, prot: 2 },
+    { name: 'Хліб цільнозерновий', weight: 50, kcal: 110, prot: 3 },
+    { name: 'Хлібці', weight: 45, kcal: 110, prot: 3 },
+    { name: 'Будь-яка крупа', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Макарони т.с.', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Бобові', weight: 35, kcal: 110, prot: 8 },
+    { name: 'Рис (не шліфований)', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Цільнозернове борошно', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Кукурудза свіжа', weight: 100, kcal: 110, prot: 3 },
+  ]},
+  Д: { color: '#9060e0', bg: 'rgba(144,96,224,0.15)', label: 'Д', name: 'Білок 1', items: [
+    { name: 'Куряче або індиче філе', weight: 125, kcal: 105, prot: 20 },
+    { name: 'Телятина', weight: 100, kcal: 105, prot: 20 },
+    { name: 'Печінка', weight: 100, kcal: 105, prot: 18 },
+    { name: 'Риба від 5% жиру', weight: 100, kcal: 105, prot: 20 },
+    { name: 'Риба до 5% жиру', weight: 150, kcal: 105, prot: 20 },
+    { name: '2 яйця', weight: 100, kcal: 105, prot: 12 },
+    { name: 'Морепродукти', weight: 155, kcal: 105, prot: 20 },
+  ]},
+  Е: { color: '#d04080', bg: 'rgba(208,64,128,0.15)', label: 'Е', name: 'Овочі 1', items: [
+    { name: 'Овочі (квашені також і зелень)', weight: 300, kcal: 60, prot: 2 },
+    { name: 'Гриби', weight: 300, kcal: 60, prot: 3 },
+  ]},
+  Є: { color: '#808080', bg: 'rgba(128,128,128,0.15)', label: 'Є', name: 'Жири 1', items: [
+    { name: 'Будь-яка олія (рекомендуємо лляну)', weight: 7, kcal: 65, prot: 0 },
+    { name: 'Масло', weight: 8, kcal: 65, prot: 0 },
+    { name: 'Майонез', weight: 9, kcal: 65, prot: 0 },
+    { name: 'Кетчуп', weight: 30, kcal: 65, prot: 0 },
+    { name: 'Гірчиця', weight: 20, kcal: 65, prot: 0 },
+    { name: 'Оливки', weight: 55, kcal: 65, prot: 0 },
+    { name: 'Авокадо', weight: 40, kcal: 65, prot: 1 },
+  ]},
+  Ж: { color: '#e07830', bg: 'rgba(224,120,48,0.15)', label: 'Ж', name: 'Молочне 2', items: [
+    { name: 'Сир кисломолочний 0.2%', weight: 115, kcal: 100, prot: 18 },
+    { name: 'Сири м\'які, тверді, плавлені', weight: 25, kcal: 100, prot: 6 },
+    { name: 'Сметана 15%', weight: 55, kcal: 100, prot: 2 },
+    { name: 'Несолодкий йогурт 1%', weight: 205, kcal: 100, prot: 7 },
+    { name: 'Кефір 1%', weight: 215, kcal: 100, prot: 7 },
+  ]},
+  З: { color: '#40c080', bg: 'rgba(64,192,128,0.15)', label: 'З', name: 'Фрукти', items: [
+    { name: 'Фрукти та ягоди', weight: 230, kcal: 150, prot: 1 },
+    { name: 'Банани, виноград, хурма', weight: 140, kcal: 150, prot: 2 },
+  ]},
+  И: { color: '#806040', bg: 'rgba(128,96,64,0.15)', label: 'И', name: 'Горіхи', items: [
+    { name: 'Будь-які горіхи (рекомендуємо грецькі)', weight: 8, kcal: 50, prot: 1 },
+    { name: 'Насіння', weight: 8, kcal: 50, prot: 2 },
+  ]},
+  І: { color: '#9060e0', bg: 'rgba(144,96,224,0.15)', label: 'І', name: 'Білок 2', items: [
+    { name: 'Куряче або індиче філе', weight: 125, kcal: 105, prot: 20 },
+    { name: 'Телятина', weight: 100, kcal: 105, prot: 20 },
+    { name: 'Печінка', weight: 100, kcal: 105, prot: 18 },
+    { name: 'Риба від 5% жиру', weight: 100, kcal: 105, prot: 20 },
+    { name: 'Риба до 5% жиру', weight: 150, kcal: 105, prot: 20 },
+    { name: '2 яйця', weight: 100, kcal: 105, prot: 12 },
+    { name: 'Морепродукти', weight: 155, kcal: 105, prot: 20 },
+  ]},
+  Ї: { color: '#d04080', bg: 'rgba(208,64,128,0.15)', label: 'Ї', name: 'Овочі 2', items: [
+    { name: 'Овочі (квашені також і зелень)', weight: 300, kcal: 60, prot: 2 },
+    { name: 'Гриби', weight: 300, kcal: 60, prot: 3 },
+  ]},
+  Й: { color: '#808080', bg: 'rgba(128,128,128,0.15)', label: 'Й', name: 'Жири 2', items: [
+    { name: 'Будь-яка олія (рекомендуємо лляну)', weight: 7, kcal: 65, prot: 0 },
+    { name: 'Масло', weight: 8, kcal: 65, prot: 0 },
+    { name: 'Майонез', weight: 9, kcal: 65, prot: 0 },
+    { name: 'Кетчуп', weight: 30, kcal: 65, prot: 0 },
+    { name: 'Гірчиця', weight: 20, kcal: 65, prot: 0 },
+    { name: 'Авокадо', weight: 40, kcal: 65, prot: 1 },
+  ]},
+};
+
+const TOTAL_CATEGORIES = Object.keys(CATEGORIES).length;
+const DAILY_KCAL_GOAL = 1500;
+const DAILY_STEPS_GOAL = 7000;
+
+const MEASURES = [
+  { key: 'weight', name: 'Вага', unit: 'кг', icon: '⚖️' },
+  { key: 'shoulder', name: 'Обхват плеча', unit: 'см', icon: '💪' },
+  { key: 'chest', name: 'Обхват грудей', unit: 'см', icon: '🫁' },
+  { key: 'waist', name: 'Обхват талії', unit: 'см', icon: '🧍' },
+  { key: 'hips', name: 'Обхват стегон', unit: 'см', icon: '🍑' },
+  { key: 'thigh', name: 'Обхват стегна', unit: 'см', icon: '🦵' },
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getState() {
+  const raw = localStorage.getItem('fitness_state');
+  return raw ? JSON.parse(raw) : {};
+}
+
+function saveState(s) {
+  localStorage.setItem('fitness_state', JSON.stringify(s));
+}
+
+function getTodayRation() {
+  const s = getState();
+  const key = todayKey();
+  if (!s.rations) s.rations = {};
+  if (!s.rations[key]) s.rations[key] = { meals: [{}, {}, {}, {}] };
+  return s.rations[key];
+}
+
+function saveTodayRation(r) {
+  const s = getState();
+  if (!s.rations) s.rations = {};
+  s.rations[todayKey()] = r;
+  saveState(s);
+}
+
+function getTodaySteps() {
+  const s = getState();
+  if (!s.steps) return 0;
+  return s.steps[todayKey()] || 0;
+}
+
+function saveTodaySteps(v) {
+  const s = getState();
+  if (!s.steps) s.steps = {};
+  s.steps[todayKey()] = v;
+  saveState(s);
+}
+
+function getMeasures() {
+  const s = getState();
+  return s.measures || {};
+}
+
+function saveMeasureEntry(key, val) {
+  const s = getState();
+  if (!s.measures) s.measures = {};
+  if (!s.measures[key]) s.measures[key] = [];
+  s.measures[key].push({ date: todayKey(), val });
+  saveState(s);
+}
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+let currentPage = 'home';
+let rationView = 'list'; // list | meal
+let currentMeal = 0;
+let measureView = 'list'; // list | entry | history
+let currentMeasureKey = '';
+let searchQuery = '';
+
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-btn')[['home','ration','steps','measures'].indexOf(page)].classList.add('active');
+  currentPage = page;
+  rationView = 'list';
+  measureView = 'list';
+  render();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function ring(pct, color, size = 72) {
+  const r = (size - 8) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - Math.min(pct / 100, 1) * circ;
+  return `<svg class="ring" viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px">
+    <circle class="ring-bg" cx="${size/2}" cy="${size/2}" r="${r}"/>
+    <circle class="ring-fg" cx="${size/2}" cy="${size/2}" r="${r}"
+      stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+    <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central"
+      class="ring-text" transform="rotate(90,${size/2},${size/2})" style="font-size:${size < 60 ? 10 : 13}px">${Math.round(pct)}%</text>
+  </svg>`;
+}
+
+// ═══════════════════════════════════════════════
+// RENDER HOME
+// ═══════════════════════════════════════════════
+function renderHome() {
+  const ration = getTodayRation();
+  const steps = getTodaySteps();
+
+  // calc totals
+  let totalKcal = 0, totalProt = 0, filledCats = 0;
+  ration.meals.forEach(meal => {
+    Object.entries(meal).forEach(([catKey, sel]) => {
+      if (!sel) return;
+      const cat = CATEGORIES[catKey];
+      const item = cat.items[sel.itemIdx];
+      const mult = sel.portion === 'full' ? 1 : 0.5;
+      totalKcal += item.kcal * mult;
+      totalProt += item.prot * mult;
+      if (sel.portion === 'full') filledCats++;
+      else filledCats += 0.5;
+    });
+  });
+
+  const kcalPct = Math.round(totalKcal / DAILY_KCAL_GOAL * 100);
+  const stepsPct = Math.round(steps / DAILY_STEPS_GOAL * 100);
+  const rationPct = Math.round(filledCats / TOTAL_CATEGORIES * 100);
+
+  document.getElementById('home-content').innerHTML = `
+    <div class="card">
+      <div class="ring-wrap">
+        <div class="ring-info">
+          <h3>Раціон сьогодні</h3>
+          <div class="big-num c-accent">${Math.round(totalKcal)}<span style="font-size:16px;font-weight:500"> ккал</span></div>
+          <div class="sub">Білок: ${Math.round(totalProt)} г &nbsp;·&nbsp; Ціль: ${DAILY_KCAL_GOAL} ккал</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(kcalPct,100)}%"></div></div>
+        </div>
+        ${ring(kcalPct, 'var(--accent)')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ring-wrap">
+        <div class="ring-info">
+          <h3>Кроки сьогодні</h3>
+          <div class="big-num c-accent2">${steps.toLocaleString('uk')}</div>
+          <div class="sub">Ціль: ${DAILY_STEPS_GOAL.toLocaleString('uk')} кроків</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(stepsPct,100)}%;background:var(--accent2)"></div></div>
+        </div>
+        ${ring(stepsPct, 'var(--accent2)')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ring-wrap">
+        <div class="ring-info">
+          <h3>Порції заповнено</h3>
+          <div class="big-num c-orange">${Math.round(filledCats)}/${TOTAL_CATEGORIES}</div>
+          <div class="sub">категорій виконано</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(rationPct,100)}%;background:var(--orange)"></div></div>
+        </div>
+        ${ring(rationPct, 'var(--orange)')}
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// RENDER RATION
+// ═══════════════════════════════════════════════
+function renderRation() {
+  const el = document.getElementById('ration-content');
+
+  if (rationView === 'list') {
+    const ration = getTodayRation();
+    let html = `<div class="page-title">Раціон</div>`;
+
+    const mealNames = ['Сніданок', 'Обід', 'Перекус', 'Вечеря'];
+    for (let i = 0; i < 4; i++) {
+      const meal = ration.meals[i];
+      const cats = Object.keys(meal).filter(k => meal[k]);
+      let kcal = 0, prot = 0;
+      cats.forEach(k => {
+        const item = CATEGORIES[k].items[meal[k].itemIdx];
+        const m = meal[k].portion === 'full' ? 1 : 0.5;
+        kcal += item.kcal * m; prot += item.prot * m;
+      });
+      const summary = cats.length ? `${Math.round(kcal)} ккал · ${Math.round(prot)}г білка` : 'Порожньо';
+      html += `<div class="meal-row" onclick="openMeal(${i})">
+        <div class="meal-num">${i+1}</div>
+        <div class="meal-text">
+          <h4>${mealNames[i]}</h4>
+          <p>${summary}</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>`;
+    }
+    el.innerHTML = html;
+
+  } else {
+    // meal detail
+    const ration = getTodayRation();
+    const meal = ration.meals[currentMeal];
+    const mealNames = ['Сніданок', 'Обід', 'Перекус', 'Вечеря'];
+
+    let searchHtml = `
+      <button class="back-btn" onclick="rationView='list';renderRation()">‹ Назад</button>
+      <div class="page-title">${mealNames[currentMeal]}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;padding:10px 12px;background:var(--surface2);border-radius:10px;">
+        💡 1 клік — ½ порції &nbsp;·&nbsp; 2 кліки — повна порція &nbsp;·&nbsp; 3 кліки — скасувати
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-field" placeholder="Пошук інгредієнтів..." 
+          oninput="searchQuery=this.value;renderRation()" value="${searchQuery}">
+      </div>
+    `;
+
+    let listHtml = '';
+    Object.entries(CATEGORIES).forEach(([catKey, cat]) => {
+      const filtered = cat.items.filter(item =>
+        !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      if (!filtered.length) return;
+
+      listHtml += `<div class="section-title">${catKey} — ${cat.name}</div>`;
+      filtered.forEach((item, origIdx) => {
+        // find original index
+        const itemIdx = cat.items.indexOf(item);
+        const sel = meal[catKey];
+        const isSelected = sel && sel.itemIdx === itemIdx;
+        const isFull = isSelected && sel.portion === 'full';
+        const isHalf = isSelected && sel.portion === 'half';
+
+        listHtml += `
+          <div class="food-item ${isFull ? 'selected' : isHalf ? 'half-selected' : ''}"
+            onclick="toggleItem('${catKey}', ${itemIdx})">
+            <div class="cat-badge" style="background:${cat.bg};color:${cat.color}">${catKey}</div>
+            <div class="food-info">
+              <div class="food-name">${item.name}</div>
+              <div class="food-meta">${item.weight}г · ${item.kcal} ккал · ${item.prot}г білка</div>
+            </div>
+            ${isFull ? '<div class="portion-badge">Повна порція</div>' : ''}
+            ${isHalf ? '<div class="portion-badge half">½ порції</div>' : ''}
+          </div>`;
+      });
+    });
+
+    el.innerHTML = searchHtml + listHtml;
+  }
+}
+
+function openMeal(idx) {
+  currentMeal = idx;
+  rationView = 'meal';
+  searchQuery = '';
+  renderRation();
+}
+
+function toggleItem(catKey, itemIdx) {
+  const ration = getTodayRation();
+  const meal = ration.meals[currentMeal];
+  const cur = meal[catKey];
+
+  if (!cur || cur.itemIdx !== itemIdx) {
+    meal[catKey] = { itemIdx, portion: 'half' };
+  } else if (cur.portion === 'half') {
+    meal[catKey] = { itemIdx, portion: 'full' };
+  } else {
+    delete meal[catKey];
+  }
+
+  saveTodayRation(ration);
+  renderRation();
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════
+// RENDER STEPS
+// ═══════════════════════════════════════════════
+function renderSteps() {
+  const steps = getTodaySteps();
+  const pct = Math.round(steps / DAILY_STEPS_GOAL * 100);
+  const s = getState();
+  const stepsHistory = s.steps || {};
+  const entries = Object.entries(stepsHistory).sort((a,b) => b[0].localeCompare(a[0])).slice(0,7);
+
+  document.getElementById('steps-content').innerHTML = `
+    <div class="card" style="text-align:center;padding:30px 18px">
+      <div style="display:flex;justify-content:center;margin-bottom:16px">
+        ${ring(pct, 'var(--accent2)', 100)}
+      </div>
+      <div class="steps-big c-accent2">${steps.toLocaleString('uk')}</div>
+      <div class="steps-goal">Ціль: ${DAILY_STEPS_GOAL.toLocaleString('uk')} кроків</div>
+    </div>
+
+    <div class="input-wrap">
+      <div class="input-label">Кроки сьогодні</div>
+      <input class="input-field" type="number" id="steps-input" placeholder="Введи кількість кроків" value="${steps || ''}">
+    </div>
+    <button class="btn btn-primary" onclick="saveSteps()">Зберегти</button>
+
+    ${entries.length > 1 ? `
+      <div class="section-title">Останні 7 днів</div>
+      <div class="card">
+        ${entries.map(([date, val]) => `
+          <div class="hist-row">
+            <span class="hist-date">${date}</span>
+            <span class="hist-val c-accent2">${Number(val).toLocaleString('uk')}</span>
+          </div>`).join('')}
+      </div>` : ''}
+  `;
+}
+
+function saveSteps() {
+  const val = parseInt(document.getElementById('steps-input').value);
+  if (isNaN(val) || val < 0) { showToast('Введи коректне число'); return; }
+  saveTodaySteps(val);
+  showToast('🚶 Кроки збережено!');
+  renderSteps();
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════
+// RENDER MEASURES
+// ═══════════════════════════════════════════════
+function renderMeasures() {
+  const el = document.getElementById('measures-content');
+  const allMeasures = getMeasures();
+
+  if (measureView === 'list') {
+    let html = '';
+    MEASURES.forEach(m => {
+      const entries = allMeasures[m.key] || [];
+      const last = entries[entries.length - 1];
+      html += `<div class="measure-row" onclick="openMeasure('${m.key}')">
+        <div class="measure-left">
+          <span class="measure-icon">${m.icon}</span>
+          <span class="measure-name">${m.name}</span>
+        </div>
+        <span class="measure-val">${last ? last.val + ' ' + m.unit : '—'} ›</span>
+      </div>`;
+    });
+    el.innerHTML = html;
+
+  } else if (measureView === 'entry') {
+    const m = MEASURES.find(x => x.key === currentMeasureKey);
+    const entries = (getMeasures()[currentMeasureKey] || []).slice(-5).reverse();
+    el.innerHTML = `
+      <button class="back-btn" onclick="measureView='list';renderMeasures()">‹ Назад</button>
+      <div class="page-title">${m.icon} ${m.name}</div>
+      <div class="input-wrap">
+        <div class="input-label">Нове значення (${m.unit})</div>
+        <input class="input-field" type="number" step="0.1" id="measure-input" placeholder="Наприклад: ${m.key === 'weight' ? '65.5' : '38'}">
+      </div>
+      <button class="btn btn-primary" onclick="saveMeasure()">Зберегти</button>
+      ${entries.length ? `
+        <div class="section-title">Історія</div>
+        <div class="card">
+          ${entries.map(e => `
+            <div class="hist-row">
+              <span class="hist-date">${e.date}</span>
+              <span class="hist-val">${e.val} ${m.unit}</span>
+            </div>`).join('')}
+        </div>` : ''}
+    `;
+  }
+}
+
+function openMeasure(key) {
+  currentMeasureKey = key;
+  measureView = 'entry';
+  renderMeasures();
+}
+
+function saveMeasure() {
+  const val = parseFloat(document.getElementById('measure-input').value);
+  if (isNaN(val) || val <= 0) { showToast('Введи коректне значення'); return; }
+  saveMeasureEntry(currentMeasureKey, val);
+  const m = MEASURES.find(x => x.key === currentMeasureKey);
+  showToast(`${m.icon} ${m.name}: ${val} ${m.unit} збережено!`);
+  measureView = 'list';
+  renderMeasures();
+}
+
+// ═══════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════
+function render() {
+  if (currentPage === 'home') renderHome();
+  else if (currentPage === 'ration') renderRation();
+  else if (currentPage === 'steps') renderSteps();
+  else if (currentPage === 'measures') renderMeasures();
+}
+
+// Init Telegram Web App
+if (window.Telegram && window.Telegram.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+}
+
+render();
+</script>
+</body>
+</html>
