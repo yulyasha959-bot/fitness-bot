@@ -1,5 +1,5 @@
 import os, json, tempfile
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, MessageHandler,
     filters, ContextTypes,
@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import io
 
 TOKEN = "8921021336:AAF2agrxCts1tXaRl8p1FWojyjEaXWZrBQ0"
+MINI_APP_URL = "https://yulyasha959-bot.github.io/fitness-bot/"
 
 scope = [
     "https://spreadsheets.google.com/feeds",
@@ -139,9 +140,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             name=f"reminder_{chat_id}",
         )
+    inline_kb = InlineKeyboardMarkup([[
+        InlineKeyboardButton(
+            "🏋️ Відкрити Fitness Tracker",
+            web_app=WebAppInfo(url=MINI_APP_URL)
+        )
+    ]])
     await update.message.reply_text(
-        "Привіт ✨ Твій fitness tracker готовий!\n\n⏰ Щоденне нагадування встановлено на 20:00.",
-        reply_markup=main_keyboard,
+        "Привіт ✨ Твій fitness tracker готовий!\n\n"
+        "Натисни кнопку нижче щоб відкрити додаток 👇",
+        reply_markup=inline_kb,
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
