@@ -671,6 +671,16 @@ function renderRation() {
       </div>
     `;
 
+    // Calculate how many halves are used across ALL meals for each category
+    const catHalves = {};
+    ration.meals.forEach((m, mIdx) => {
+      Object.entries(m).forEach(([k, sel]) => {
+        if (!sel) return;
+        if (!catHalves[k]) catHalves[k] = 0;
+        catHalves[k] += sel.portion === 'full' ? 2 : 1;
+      });
+    });
+
     let listHtml = '';
     Object.entries(CATEGORIES).forEach(([catKey, cat]) => {
       const filtered = cat.items.filter(item =>
@@ -679,24 +689,36 @@ function renderRation() {
       if (!filtered.length) return;
 
       listHtml += `<div class="section-title">${catKey} — ${cat.name}</div>`;
-      filtered.forEach((item, origIdx) => {
-        // find original index
+      filtered.forEach((item) => {
         const itemIdx = cat.items.indexOf(item);
         const sel = meal[catKey];
         const isSelected = sel && sel.itemIdx === itemIdx;
         const isFull = isSelected && sel.portion === 'full';
         const isHalf = isSelected && sel.portion === 'half';
 
+        // Total halves used in this category across all meals
+        const totalHalves = catHalves[catKey] || 0;
+        // Is this category fully used (2 halves) and NOT in current meal?
+        const isBlocked = totalHalves >= 2 && !isSelected;
+        // Is half used in another meal (not current)?
+        const halfElsewhere = totalHalves >= 1 && !isSelected;
+
+        let clickHandler = isBlocked ? '' : `onclick="toggleItem('${catKey}', ${itemIdx})"`;
+        let extraClass = isFull ? 'selected' : isHalf ? 'half-selected' : '';
+        let opacity = isBlocked ? 'opacity:0.3;pointer-events:none;' : '';
+        let badge = '';
+        if (isFull) badge = '<div class="portion-badge">Повна порція</div>';
+        else if (isHalf) badge = '<div class="portion-badge half">½ порції</div>';
+        else if (halfElsewhere && !isSelected) badge = '<div class="portion-badge half">½ вже є</div>';
+
         listHtml += `
-          <div class="food-item ${isFull ? 'selected' : isHalf ? 'half-selected' : ''}"
-            onclick="toggleItem('${catKey}', ${itemIdx})">
+          <div class="food-item ${extraClass}" style="${opacity}" ${clickHandler}>
             <div class="cat-badge" style="background:${cat.bg};color:${cat.color}">${catKey}</div>
             <div class="food-info">
               <div class="food-name">${item.name}</div>
               <div class="food-meta">${item.weight}г · ${item.kcal} ккал · ${item.prot}г білка</div>
             </div>
-            ${isFull ? '<div class="portion-badge">Повна порція</div>' : ''}
-            ${isHalf ? '<div class="portion-badge half">½ порції</div>' : ''}
+            ${badge}
           </div>`;
       });
     });
@@ -717,10 +739,25 @@ function toggleItem(catKey, itemIdx) {
   const meal = ration.meals[currentMeal];
   const cur = meal[catKey];
 
+  // Count halves used in OTHER meals
+  let halvesElsewhere = 0;
+  ration.meals.forEach((m, idx) => {
+    if (idx === currentMeal) return;
+    if (m[catKey]) halvesElsewhere += m[catKey].portion === 'full' ? 2 : 1;
+  });
+
   if (!cur || cur.itemIdx !== itemIdx) {
+    // Adding new: only allow if fewer than 2 halves used elsewhere
+    if (halvesElsewhere >= 2) return;
     meal[catKey] = { itemIdx, portion: 'half' };
   } else if (cur.portion === 'half') {
-    meal[catKey] = { itemIdx, portion: 'full' };
+    // Upgrading to full: only if no halves elsewhere
+    if (halvesElsewhere >= 1) {
+      // Can't upgrade to full if half already used elsewhere — remove instead
+      delete meal[catKey];
+    } else {
+      meal[catKey] = { itemIdx, portion: 'full' };
+    }
   } else {
     delete meal[catKey];
   }
