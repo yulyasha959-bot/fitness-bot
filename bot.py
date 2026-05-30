@@ -131,15 +131,6 @@ async def send_reminder(context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    current_jobs = context.job_queue.get_jobs_by_name(f"reminder_{chat_id}")
-    if not current_jobs:
-        context.job_queue.run_daily(
-            send_reminder,
-            time=datetime.strptime("20:00", "%H:%M").time(),
-            chat_id=chat_id,
-            name=f"reminder_{chat_id}",
-        )
     inline_kb = InlineKeyboardMarkup([[
         InlineKeyboardButton(
             "🏋️ Відкрити Fitness Tracker",
@@ -147,8 +138,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     ]])
     await update.message.reply_text(
-        "Привіт ✨ Твій fitness tracker готовий!\n\n"
-        "Натисни кнопку нижче щоб відкрити додаток 👇",
+        "Привіт ✨ Натисни кнопку щоб відкрити додаток 👇",
         reply_markup=inline_kb,
     )
 
