@@ -1,1616 +1,1041 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gyre — Цілодобовий стрімінг для бізнесу</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
-  <style>
-    /* ==========================================
-       CSS Variables & Reset
-    ========================================== */
-    :root {
-      --bg-base:       #080b12;
-      --bg-surface:    #0e1220;
-      --bg-card:       #111827;
-      --bg-card-hover: #141d2e;
-      --border:        rgba(255,255,255,0.07);
-      --border-accent: rgba(0,224,255,0.25);
-
-      --cyan:          #00e0ff;
-      --cyan-dim:      rgba(0,224,255,0.12);
-      --cyan-glow:     rgba(0,224,255,0.35);
-      --purple:        #8b5cf6;
-      --purple-dim:    rgba(139,92,246,0.12);
-      --blue:          #3b82f6;
-
-      --text-primary:  #f0f4ff;
-      --text-secondary:#8b9ab5;
-      --text-muted:    #4a5568;
-
-      --font-display:  'Syne', sans-serif;
-      --font-body:     'DM Sans', sans-serif;
-
-      --max-w:         1440px;
-      --pad-desktop:   80px;
-      --pad-tablet:    32px;
-      --pad-mobile:    16px;
-
-      --radius-sm:     8px;
-      --radius-md:     14px;
-      --radius-lg:     24px;
-      --radius-xl:     36px;
-
-      --transition:    0.25s cubic-bezier(0.4,0,0.2,1);
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--bg-base);
-      color: var(--text-primary);
-      font-family: var(--font-body);
-      font-size: 16px;
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-
-    /* ==========================================
-       Noise Overlay
-    ========================================== */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      background-size: 200px 200px;
-      opacity: 0.45;
-    }
-
-    /* ==========================================
-       Helpers
-    ========================================== */
-    .container {
-      width: 100%;
-      max-width: var(--max-w);
-      margin: 0 auto;
-      padding: 0 var(--pad-desktop);
-      position: relative;
-      z-index: 1;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: var(--font-display);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--cyan);
-      background: var(--cyan-dim);
-      border: 1px solid var(--border-accent);
-      border-radius: 100px;
-      padding: 5px 14px;
-      margin-bottom: 20px;
-    }
-
-    .tag::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--cyan);
-      box-shadow: 0 0 8px var(--cyan);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.5; transform: scale(0.75); }
-    }
-
-    h1, h2, h3, h4 { font-family: var(--font-display); }
-
-    h1 { font-size: clamp(2.4rem, 5vw, 4.2rem); font-weight: 800; line-height: 1.08; letter-spacing: -0.02em; }
-    h2 { font-size: clamp(1.8rem, 3.5vw, 3rem);  font-weight: 700; line-height: 1.15; letter-spacing: -0.015em; }
-    h3 { font-size: 1.2rem; font-weight: 700; }
-
-    p { color: var(--text-secondary); }
-
-    a { color: inherit; text-decoration: none; }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-display);
-      font-weight: 600;
-      font-size: 14px;
-      letter-spacing: 0.02em;
-      border: none;
-      cursor: pointer;
-      border-radius: var(--radius-sm);
-      padding: 13px 28px;
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--cyan) 0%, #0096c7 100%);
-      color: #000;
-    }
-
-    .btn-primary::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(255,255,255,0);
-      transition: var(--transition);
-    }
-
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px var(--cyan-glow); }
-    .btn-primary:hover::after { background: rgba(255,255,255,0.1); }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-    }
-
-    .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
-
-    /* Section spacing */
-    section { padding: 100px 0; position: relative; }
-
-    /* Dividers */
-    .section-divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--border), transparent);
-      margin: 0 auto;
-      max-width: var(--max-w);
-    }
-
-    /* Glow blobs */
-    .glow-blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(120px);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* ==========================================
-       HEADER
-    ========================================== */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      background: rgba(8,11,18,0.8);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .header-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 72px;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-family: var(--font-display);
-      font-weight: 800;
-      font-size: 22px;
-      letter-spacing: -0.02em;
-      color: var(--text-primary);
-    }
-
-    .logo-mark {
-      width: 34px;
-      height: 34px;
-      background: linear-gradient(135deg, var(--cyan), var(--purple));
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 800;
-      color: #fff;
-      flex-shrink: 0;
-    }
-
-    nav { display: flex; align-items: center; gap: 6px; }
-
-    nav a {
-      font-family: var(--font-display);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      padding: 8px 14px;
-      border-radius: var(--radius-sm);
-      transition: var(--transition);
-      letter-spacing: 0.02em;
-    }
-
-    nav a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-
-    .header-cta { flex-shrink: 0; }
-
-    /* Mobile hamburger */
-    .nav-toggle { display: none; background: none; border: 1px solid var(--border); color: var(--text-primary); border-radius: var(--radius-sm); padding: 8px 10px; cursor: pointer; font-size: 18px; }
-
-    /* ==========================================
-       HERO
-    ========================================== */
-    #hero {
-      padding: 120px 0 100px;
-      overflow: hidden;
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 7fr 5fr;
-      gap: 60px;
-      align-items: center;
-    }
-
-    .hero-eyebrow {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 28px;
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      font-family: var(--font-display);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #fff;
-      background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(0,224,255,0.2));
-      border: 1px solid rgba(139,92,246,0.4);
-      border-radius: 100px;
-      padding: 5px 14px;
-    }
-
-    .hero-badge-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--purple);
-      box-shadow: 0 0 8px var(--purple);
-    }
-
-    .hero-title { margin-bottom: 24px; }
-
-    .hero-title .accent {
-      display: inline-block;
-      background: linear-gradient(135deg, var(--cyan) 0%, var(--purple) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-subtitle {
-      font-size: 1.1rem;
-      color: var(--text-secondary);
-      max-width: 520px;
-      margin-bottom: 36px;
-      line-height: 1.7;
-    }
-
-    .hero-cta-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .hero-stats {
-      display: flex;
-      gap: 32px;
-      margin-top: 52px;
-      padding-top: 40px;
-      border-top: 1px solid var(--border);
-    }
-
-    .hero-stat-value {
-      font-family: var(--font-display);
-      font-size: 2rem;
-      font-weight: 800;
-      line-height: 1;
-      background: linear-gradient(135deg, var(--text-primary), var(--cyan));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 4px;
-    }
-
-    .hero-stat-label { font-size: 12px; color: var(--text-muted); letter-spacing: 0.05em; }
-
-    /* Hero visual */
-    .hero-visual {
-      position: relative;
-    }
-
-    .hero-screen {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
-      position: relative;
-    }
-
-    .screen-bar {
-      background: rgba(255,255,255,0.04);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .screen-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .screen-dot.r { background: #ff5f57; }
-    .screen-dot.y { background: #ffbd2e; }
-    .screen-dot.g { background: #28c840; }
-
-    .screen-body { padding: 20px; }
-
-    .stream-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .stream-thumb {
-      width: 56px;
-      height: 42px;
-      border-radius: 6px;
-      background: linear-gradient(135deg, var(--cyan-dim), var(--purple-dim));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: 18px;
-    }
-
-    .stream-info { flex: 1; min-width: 0; }
-
-    .stream-name {
-      font-family: var(--font-display);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .stream-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-    .stream-status {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-family: var(--font-display);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: #00e676;
-      background: rgba(0,230,118,0.1);
-      border: 1px solid rgba(0,230,118,0.25);
-      border-radius: 100px;
-      padding: 3px 10px;
-      flex-shrink: 0;
-    }
-
-    .stream-status::before {
-      content: '';
-      width: 5px; height: 5px; border-radius: 50%;
-      background: #00e676;
-      box-shadow: 0 0 6px #00e676;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-
-    .screen-footer {
-      border-top: 1px solid var(--border);
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .screen-footer-label { font-size: 11px; color: var(--text-muted); }
-
-    .screen-metric {
-      font-family: var(--font-display);
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--cyan);
-    }
-
-    .hero-float-badge {
-      position: absolute;
-      right: -20px;
-      bottom: 40px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-accent);
-      border-radius: var(--radius-md);
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
-
-    .float-icon {
-      width: 40px; height: 40px; border-radius: 10px;
-      background: linear-gradient(135deg, var(--cyan-dim), rgba(0,224,255,0.05));
-      border: 1px solid var(--border-accent);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
-    }
-
-    .float-label { font-size: 11px; color: var(--text-muted); }
-    .float-value { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text-primary); }
-
-    /* ==========================================
-       TRUST BAR
-    ========================================== */
-    #trust {
-      padding: 32px 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .trust-inner {
-      display: flex;
-      align-items: center;
-      gap: 40px;
-      flex-wrap: wrap;
-    }
-
-    .trust-label {
-      font-family: var(--font-display);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      flex-shrink: 0;
-    }
-
-    .trust-separator { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
-
-    .trust-items { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
-
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-family: var(--font-display);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-
-    .trust-item svg, .trust-icon { font-size: 18px; }
-
-    /* ==========================================
-       FEATURES
-    ========================================== */
-    #features { background: transparent; }
-
-    .section-header { text-align: center; margin-bottom: 64px; }
-    .section-header p { max-width: 560px; margin: 16px auto 0; font-size: 1.05rem; }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 20px;
-    }
-
-    .feat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 36px 32px;
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .feat-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: linear-gradient(135deg, var(--cyan-dim), transparent 60%);
-      opacity: 0;
-      transition: var(--transition);
-    }
-
-    .feat-card:hover { border-color: var(--border-accent); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-    .feat-card:hover::before { opacity: 1; }
-
-    .feat-card.col-8 { grid-column: span 8; }
-    .feat-card.col-4 { grid-column: span 4; }
-    .feat-card.col-6 { grid-column: span 6; }
-
-    .feat-icon {
-      width: 52px; height: 52px; border-radius: 14px;
-      background: var(--cyan-dim);
-      border: 1px solid var(--border-accent);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-      margin-bottom: 24px;
-    }
-
-    .feat-icon.purple {
-      background: var(--purple-dim);
-      border-color: rgba(139,92,246,0.25);
-    }
-
-    .feat-icon.blue {
-      background: rgba(59,130,246,0.1);
-      border-color: rgba(59,130,246,0.25);
-    }
-
-    .feat-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
-    .feat-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65; }
-
-    .feat-number {
-      position: absolute;
-      top: 28px;
-      right: 28px;
-      font-family: var(--font-display);
-      font-size: 64px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.03);
-      line-height: 1;
-      pointer-events: none;
-    }
-
-    .feat-wide-content { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
-
-    .feat-scale-list { list-style: none; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-
-    .feat-scale-list li {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.88rem;
-      color: var(--text-secondary);
-    }
-
-    .feat-scale-list li::before {
-      content: '✓';
-      width: 20px; height: 20px; border-radius: 50%;
-      background: var(--cyan-dim);
-      border: 1px solid var(--border-accent);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px;
-      color: var(--cyan);
-      flex-shrink: 0;
-    }
-
-    .scale-visual { display: flex; flex-direction: column; gap: 10px; }
-
-    .scale-bar-row { display: flex; align-items: center; gap: 12px; }
-    .scale-bar-label { font-family: var(--font-display); font-size: 11px; font-weight: 600; color: var(--text-muted); width: 60px; text-align: right; flex-shrink: 0; }
-    .scale-bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; }
-    .scale-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--cyan), var(--purple)); }
-
-    /* ==========================================
-       ENTERPRISE TARIFFS
-    ========================================== */
-    #enterprise { background: var(--bg-surface); }
-
-    .tariff-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-    }
-
-    .tariff-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 32px 28px;
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .tariff-card.featured {
-      border-color: var(--border-accent);
-      background: linear-gradient(135deg, rgba(0,224,255,0.06), rgba(139,92,246,0.05));
-    }
-
-    .tariff-featured-badge {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      font-family: var(--font-display);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--bg-base);
-      background: linear-gradient(135deg, var(--cyan), #0096c7);
-      border-radius: 100px;
-      padding: 4px 12px;
-    }
-
-    .tariff-card:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-
-    .tariff-tier {
-      font-family: var(--font-display);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .tariff-streams {
-      font-family: var(--font-display);
-      font-size: 3rem;
-      font-weight: 800;
-      line-height: 1;
-      margin-bottom: 4px;
-      background: linear-gradient(135deg, var(--text-primary), var(--cyan));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .tariff-streams-label {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 28px;
-    }
-
-    .tariff-divider { height: 1px; background: var(--border); margin: 20px 0; }
-
-    .tariff-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
-
-    .tariff-features li {
-      display: flex;
-      align-items: flex-start;
-      gap: 9px;
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
-    .tariff-features li::before {
-      content: '→';
-      color: var(--cyan);
-      font-size: 12px;
-      margin-top: 1px;
-      flex-shrink: 0;
-    }
-
-    .tariff-cta { width: 100%; }
-
-    /* ==========================================
-       HOW IT WORKS
-    ========================================== */
-    #how {
-      background: transparent;
-    }
-
-    .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-      position: relative;
-    }
-
-    .steps-grid::before {
-      content: '';
-      position: absolute;
-      top: 28px;
-      left: calc(12.5% + 14px);
-      right: calc(12.5% + 14px);
-      height: 1px;
-      background: linear-gradient(90deg, var(--cyan), var(--purple));
-      z-index: 0;
-    }
-
-    .step-item { text-align: center; padding: 0 24px; position: relative; z-index: 1; }
-
-    .step-num {
-      width: 56px; height: 56px; border-radius: 50%;
-      background: var(--bg-surface);
-      border: 2px solid var(--border-accent);
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-display);
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--cyan);
-      margin: 0 auto 24px;
-      position: relative;
-    }
-
-    .step-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
-    .step-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
-
-    /* ==========================================
-       FAQ
-    ========================================== */
-    #faq { background: transparent; }
-
-    .faq-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .faq-item {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-    }
-
-    .faq-question {
-      width: 100%;
-      background: none;
-      border: none;
-      color: var(--text-primary);
-      font-family: var(--font-display);
-      font-size: 14px;
-      font-weight: 600;
-      text-align: left;
-      padding: 22px 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      transition: var(--transition);
-    }
-
-    .faq-question:hover { color: var(--cyan); }
-
-    .faq-arrow {
-      width: 24px; height: 24px; border-radius: 50%;
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px;
-      flex-shrink: 0;
-      transition: var(--transition);
-      color: var(--text-muted);
-    }
-
-    .faq-item.open .faq-arrow { transform: rotate(180deg); border-color: var(--border-accent); color: var(--cyan); }
-    .faq-item.open .faq-question { color: var(--cyan); }
-
-    .faq-answer {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
-    }
-
-    .faq-item.open .faq-answer { max-height: 300px; }
-
-    .faq-answer-inner {
-      padding: 0 24px 22px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-      border-top: 1px solid var(--border);
-      padding-top: 16px;
-      margin: 0 24px;
-      margin-bottom: 22px;
-    }
-
-    .faq-warning {
-      display: flex;
-      gap: 10px;
-      background: rgba(255,190,0,0.08);
-      border: 1px solid rgba(255,190,0,0.2);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      font-size: 12px;
-      color: #ffd566;
-      margin-top: 10px;
-    }
-
-    /* ==========================================
-       CTA SECTION
-    ========================================== */
-    #cta-section {
-      padding: 80px 0;
-    }
-
-    .cta-box {
-      background: linear-gradient(135deg, rgba(0,224,255,0.08) 0%, rgba(139,92,246,0.08) 100%);
-      border: 1px solid var(--border-accent);
-      border-radius: var(--radius-xl);
-      padding: 72px 80px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cta-box .glow-blob { width: 400px; height: 400px; }
-    .cta-box .glow-blob.b1 { background: var(--cyan); opacity: 0.06; top: -100px; left: -100px; }
-    .cta-box .glow-blob.b2 { background: var(--purple); opacity: 0.06; bottom: -100px; right: -100px; }
-
-    .cta-title { margin-bottom: 20px; }
-    .cta-subtitle { max-width: 500px; margin: 0 auto 36px; font-size: 1.05rem; }
-
-    .cta-buttons { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
-
-    /* ==========================================
-       FOOTER
-    ========================================== */
-    footer {
-      background: var(--bg-surface);
-      border-top: 1px solid var(--border);
-      padding: 60px 0 32px;
-    }
-
-    .footer-grid {
-      display: grid;
-      grid-template-columns: 2.5fr 1fr 1fr 1fr;
-      gap: 48px;
-      margin-bottom: 52px;
-    }
-
-    .footer-brand .logo { margin-bottom: 16px; }
-    .footer-brand p { font-size: 13px; color: var(--text-muted); line-height: 1.7; max-width: 260px; }
-
-    .footer-col-title {
-      font-family: var(--font-display);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-    }
-
-    .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-
-    .footer-links a {
-      font-size: 13px;
-      color: var(--text-secondary);
-      transition: var(--transition);
-    }
-
-    .footer-links a:hover { color: var(--cyan); }
-
-    .footer-bottom {
-      border-top: 1px solid var(--border);
-      padding-top: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .footer-copy { font-size: 12px; color: var(--text-muted); }
-
-    .footer-yt-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-display);
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      background: rgba(255,0,0,0.08);
-      border: 1px solid rgba(255,0,0,0.2);
-      border-radius: 100px;
-      padding: 5px 14px;
-    }
-
-    /* ==========================================
-       ANIMATIONS
-    ========================================== */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .hero-content > * {
-      animation: fadeInUp 0.7s cubic-bezier(0.4,0,0.2,1) both;
-    }
-
-    .hero-content > *:nth-child(1) { animation-delay: 0.1s; }
-    .hero-content > *:nth-child(2) { animation-delay: 0.2s; }
-    .hero-content > *:nth-child(3) { animation-delay: 0.3s; }
-    .hero-content > *:nth-child(4) { animation-delay: 0.4s; }
-    .hero-content > *:nth-child(5) { animation-delay: 0.5s; }
-
-    /* ==========================================
-       TABLET — 768px
-    ========================================== */
-    @media (max-width: 1100px) {
-      .container { padding: 0 var(--pad-tablet); }
-      section { padding: 80px 0; }
-
-      .hero-grid { grid-template-columns: 1fr; gap: 48px; }
-      .hero-visual { max-width: 560px; margin: 0 auto; }
-      .hero-float-badge { right: 0; }
-
-      .features-grid { grid-template-columns: repeat(6, 1fr); }
-      .feat-card.col-8 { grid-column: span 6; }
-      .feat-card.col-4 { grid-column: span 3; }
-      .feat-card.col-6 { grid-column: span 3; }
-
-      .tariff-grid { grid-template-columns: repeat(2, 1fr); }
-      .steps-grid { grid-template-columns: repeat(2, 1fr); gap: 40px; }
-      .steps-grid::before { display: none; }
-
-      .footer-grid { grid-template-columns: 1fr 1fr; }
-
-      .cta-box { padding: 52px 40px; }
-    }
-
-    /* ==========================================
-       MOBILE — 360px
-    ========================================== */
-    @media (max-width: 640px) {
-      :root { --pad-desktop: var(--pad-mobile); }
-      .container { padding: 0 var(--pad-mobile); }
-      section { padding: 60px 0; }
-
-      #hero { padding: 72px 0 60px; }
-
-      nav { display: none; }
-      nav.open { display: flex; flex-direction: column; align-items: flex-start; position: fixed; top: 72px; left: 0; right: 0; background: var(--bg-surface); border-bottom: 1px solid var(--border); padding: 16px; gap: 4px; z-index: 99; }
-      nav.open a { padding: 12px 14px; width: 100%; }
-      .nav-toggle { display: flex; }
-      .header-cta { display: none; }
-
-      .hero-stats { gap: 20px; flex-wrap: wrap; }
-
-      .features-grid { grid-template-columns: repeat(4, 1fr); }
-      .feat-card.col-8 { grid-column: span 4; }
-      .feat-card.col-4 { grid-column: span 4; }
-      .feat-card.col-6 { grid-column: span 4; }
-      .feat-wide-content { grid-template-columns: 1fr; }
-
-      .tariff-grid { grid-template-columns: 1fr; }
-
-      .steps-grid { grid-template-columns: 1fr; gap: 32px; }
-      .steps-grid::before { display: none; }
-
-      .faq-grid { grid-template-columns: 1fr; }
-
-      .footer-grid { grid-template-columns: 1fr; gap: 32px; }
-
-      .cta-box { padding: 40px 24px; border-radius: var(--radius-lg); }
-
-      .footer-bottom { flex-direction: column; align-items: flex-start; }
-
-      .hero-float-badge { display: none; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fitness Tracker</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #222222;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --accent: #c8f060;
+    --accent2: #60d4f0;
+    --accent3: #f06060;
+    --orange: #f0a060;
+    --purple: #a060f0;
+    --pink: #f060c0;
+    --teal: #60f0c0;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-bottom: 80px;
+  }
+
+  /* NAV */
+  .nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 4px;
+    border: none;
+    background: none;
+    color: var(--text3);
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .2s;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 22px; height: 22px; }
+
+  /* PAGES */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* HEADER */
+  .page-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+  }
+
+  /* PROGRESS RING */
+  .ring-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ring-info h3 { font-size: 13px; color: var(--text2); font-weight: 500; margin-bottom: 4px; }
+  .ring-info .big-num { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+  .ring-info .sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .ring-info .bar-wrap { margin-top: 10px; height: 4px; background: var(--border); border-radius: 2px; width: 180px; }
+  .ring-info .bar-fill { height: 4px; border-radius: 2px; background: var(--accent); transition: width .5s ease; }
+
+  svg.ring { width: 72px; height: 72px; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
+  .ring-fg { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
+  .ring-text { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 13px; fill: var(--text); }
+
+  /* CATEGORY BADGE */
+  .cat-badge {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* FOOD ITEM */
+  .food-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .15s;
+    border-radius: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin: 0 -8px;
+  }
+  .food-item:last-child { border-bottom: none; }
+  .food-item:active { background: var(--surface2); }
+  .food-item.selected { background: rgba(200,240,96,0.08); border-color: rgba(200,240,96,0.2); }
+  .food-item.half-selected { background: rgba(200,240,96,0.04); border-color: rgba(200,240,96,0.1); }
+
+  .food-info { flex: 1; }
+  .food-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .food-meta { font-size: 11px; color: var(--text2); }
+
+  .portion-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1.5px dashed var(--accent);
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .portion-badge.half { border-color: var(--text3); color: var(--text3); }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 20px 0 10px;
+  }
+
+  /* MEAL ROW */
+  .meal-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: border-color .2s;
+  }
+  .meal-row:active { border-color: var(--accent); }
+  .meal-num {
+    width: 32px; height: 32px;
+    background: var(--surface2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+    color: var(--text2);
+  }
+  .meal-text { flex: 1; }
+  .meal-text h4 { font-size: 14px; font-weight: 600; }
+  .meal-text p { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .chevron { color: var(--text3); font-size: 18px; }
+
+  /* BACK BUTTON */
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: none;
+    color: var(--text2); font-family: 'Manrope', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; margin-bottom: 16px;
+    padding: 4px 0;
+  }
+
+  /* INPUT */
+  .input-wrap { margin-bottom: 16px; }
+  .input-label { font-size: 12px; color: var(--text2); font-weight: 600; margin-bottom: 6px; }
+  .input-field {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .input-field:focus { border-color: var(--accent); }
+
+  /* BUTTON */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn-primary { background: var(--accent); color: #111; }
+  .btn-secondary { background: var(--surface2); color: var(--text); margin-top: 8px; }
+
+  /* MEASURE ROW */
+  .measure-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .measure-row:active { border-color: var(--accent2); }
+  .measure-left { display: flex; align-items: center; gap: 12px; }
+  .measure-icon { font-size: 20px; }
+  .measure-name { font-size: 14px; font-weight: 600; }
+  .measure-val { font-size: 14px; font-weight: 700; color: var(--text2); }
+
+  /* SEARCH */
+  .search-wrap { position: relative; margin-bottom: 16px; }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 16px; }
+  .search-field {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px 12px 42px;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  .search-field:focus { border-color: var(--accent); }
+  .search-field::placeholder { color: var(--text3); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 13px; font-weight: 600;
+    opacity: 0; transition: all .3s;
+    pointer-events: none; white-space: nowrap;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* HISTORY LIST */
+  .hist-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .hist-row:last-child { border-bottom: none; }
+  .hist-date { color: var(--text2); }
+  .hist-val { font-weight: 700; }
+
+  /* STEPS DISPLAY */
+  .steps-big { font-size: 56px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
+  .steps-goal { font-size: 13px; color: var(--text2); margin-top: 6px; }
+
+  /* COLOR UTILS */
+  .c-accent { color: var(--accent); }
+  .c-accent2 { color: var(--accent2); }
+  .c-orange { color: var(--orange); }
+  .c-purple { color: var(--purple); }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty p { font-size: 14px; }
+</style>
 </head>
 <body>
 
-  <!-- ===================== HEADER ===================== -->
-  <header>
-    <div class="container">
-      <div class="header-inner">
-        <a href="#" class="logo" aria-label="Gyre">
-          <div class="logo-mark">G</div>
-          Gyre
-        </a>
-        <nav id="main-nav">
-          <a href="#features">Можливості</a>
-          <a href="#enterprise">Enterprise</a>
-          <a href="#how">Як це працює</a>
-          <a href="#faq">FAQ</a>
-        </nav>
-        <a href="#cta-section" class="btn btn-primary header-cta">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-          Спробувати безкоштовно
-        </a>
-        <button class="nav-toggle" id="nav-toggle" aria-label="Меню">☰</button>
-      </div>
-    </div>
-  </header>
+<!-- PAGES -->
+<div id="page-home" class="page active">
+  <div class="page-title">Головна 👋</div>
+  <div id="home-content"></div>
+</div>
 
-  <!-- ===================== HERO ===================== -->
-  <section id="hero">
-    <div class="glow-blob" style="width:600px;height:600px;background:var(--cyan);opacity:0.04;top:-200px;left:-100px;"></div>
-    <div class="glow-blob" style="width:500px;height:500px;background:var(--purple);opacity:0.05;top:-100px;right:-150px;"></div>
-    <div class="container">
-      <div class="hero-grid">
-        <div class="hero-content">
-          <div class="hero-eyebrow">
-            <div class="hero-badge">
-              <span class="hero-badge-dot"></span>
-              Офіційно рекомендовано YouTube
-            </div>
-          </div>
-          <h1 class="hero-title">
-            24/7 стрімінг<br>для вашого<br><span class="accent">бізнесу</span>
-          </h1>
-          <p class="hero-subtitle">
-            Gyre — єдиний сервіс у <strong style="color:var(--text-primary)">YouTube Service Directory</strong>, що дозволяє транслювати готові відео у форматі цілодобового Live-стріму. Запуск через Stream Key — без доступу до вашого каналу.
-          </p>
-          <div class="hero-cta-row">
-            <a href="#cta-section" class="btn btn-primary">
-              Почати безкоштовно
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-            <a href="#features" class="btn btn-ghost">Дізнатись більше</a>
-          </div>
-          <div class="hero-stats">
-            <div>
-              <div class="hero-stat-value">1000+</div>
-              <div class="hero-stat-label">Одночасних стрімів</div>
-            </div>
-            <div>
-              <div class="hero-stat-value">24/7</div>
-              <div class="hero-stat-label">Безперервна трансляція</div>
-            </div>
-            <div>
-              <div class="hero-stat-value">Full HD</div>
-              <div class="hero-stat-label">Якість відео</div>
-            </div>
-          </div>
-        </div>
+<div id="page-ration" class="page">
+  <div id="ration-content"></div>
+</div>
 
-        <!-- Hero Visual -->
-        <div class="hero-visual">
-          <div class="hero-screen">
-            <div class="screen-bar">
-              <div class="screen-dot r"></div>
-              <div class="screen-dot y"></div>
-              <div class="screen-dot g"></div>
-              <span style="font-family:var(--font-display);font-size:11px;color:var(--text-muted);margin-left:8px;">Gyre Dashboard</span>
-            </div>
-            <div class="screen-body">
-              <div class="stream-card">
-                <div class="stream-thumb">🎵</div>
-                <div class="stream-info">
-                  <div class="stream-name">Music Channel 24/7 — Chill Beats</div>
-                  <div class="stream-meta">YouTube Live · Full HD 1080p</div>
-                </div>
-                <div class="stream-status">LIVE</div>
-              </div>
-              <div class="stream-card">
-                <div class="stream-thumb">🎬</div>
-                <div class="stream-info">
-                  <div class="stream-name">Corporate TV — Brand Stories</div>
-                  <div class="stream-meta">YouTube Live · Full HD 1080p</div>
-                </div>
-                <div class="stream-status">LIVE</div>
-              </div>
-              <div class="stream-card">
-                <div class="stream-thumb">📺</div>
-                <div class="stream-info">
-                  <div class="stream-name">Kids Content Network — Loop</div>
-                  <div class="stream-meta">YouTube Live · Full HD 1080p</div>
-                </div>
-                <div class="stream-status">LIVE</div>
-              </div>
-            </div>
-            <div class="screen-footer">
-              <span class="screen-footer-label">Активних стрімів</span>
-              <span class="screen-metric">3 / 50 активних</span>
-            </div>
-          </div>
-          <div class="hero-float-badge">
-            <div class="float-icon">☁️</div>
-            <div>
-              <div class="float-label">Сховище в хмарі</div>
-              <div class="float-value">Без навантаження на ПК</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+<div id="page-steps" class="page">
+  <div class="page-title">Кроки</div>
+  <div id="steps-content"></div>
+</div>
 
-  <!-- ===================== TRUST ===================== -->
-  <section id="trust" style="padding:32px 0;">
-    <div class="container">
-      <div class="trust-inner">
-        <span class="trust-label">Довіряють</span>
-        <div class="trust-separator"></div>
-        <div class="trust-items">
-          <div class="trust-item"><span class="trust-icon">🏢</span> Медіакомпанії</div>
-          <div class="trust-item"><span class="trust-icon">🎵</span> Музичні лейбли</div>
-          <div class="trust-item"><span class="trust-icon">📡</span> Телеканали</div>
-          <div class="trust-item"><span class="trust-icon">🎓</span> EdTech-платформи</div>
-          <div class="trust-item"><span class="trust-icon">🏬</span> Retail-бренди</div>
-        </div>
-      </div>
-    </div>
-  </section>
+<div id="page-measures" class="page">
+  <div class="page-title">Заміри</div>
+  <div id="measures-content"></div>
+</div>
 
-  <div class="section-divider"></div>
+<div id="page-analytics" class="page">
+  <div class="page-title">Аналітика 📊</div>
+  <div id="analytics-content"></div>
+</div>
 
-  <!-- ===================== FEATURES ===================== -->
-  <section id="features">
-    <div class="container">
-      <div class="section-header">
-        <div class="tag">Переваги</div>
-        <h2>Все що потрібно<br>для 24/7 стрімінгу</h2>
-        <p>Від старту першого стріму до масштабування на тисячі каналів — Gyre покриває кожен крок.</p>
-      </div>
-      <div class="features-grid">
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Головна
+  </button>
+  <button class="nav-btn" onclick="showPage('ration')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+    Раціон
+  </button>
+  <button class="nav-btn" onclick="showPage('steps')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Кроки
+  </button>
+  <button class="nav-btn" onclick="showPage('measures')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Заміри
+  </button>
+  <button class="nav-btn" onclick="showPage('analytics')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Аналітика
+  </button>
+</nav>
 
-        <!-- Wide card: Cloud streaming -->
-        <div class="feat-card col-8">
-          <span class="feat-number">01</span>
-          <div class="feat-wide-content">
-            <div>
-              <div class="feat-icon">☁️</div>
-              <h3 class="feat-title">Стрімінг без навантаження на ваш ПК</h3>
-              <p class="feat-desc">
-                Весь процес обробки та трансляції відбувається повністю в хмарі. Завантажте відео, налаштуйте розклад — і Gyre транслює його цілодобово без участі вашого комп'ютера чи сервера.
-              </p>
-              <ul class="feat-scale-list" style="margin-top:18px;">
-                <li>Хмарне зберігання контенту</li>
-                <li>Автоматичний loop без розривів</li>
-                <li>Стабільна трансляція 24 години на добу, 7 днів на тиждень</li>
-              </ul>
-            </div>
-            <div class="scale-visual" style="padding:20px;background:rgba(0,224,255,0.03);border:1px solid var(--border);border-radius:var(--radius-md);">
-              <div style="font-family:var(--font-display);font-size:11px;color:var(--text-muted);margin-bottom:16px;letter-spacing:0.08em;text-transform:uppercase;">Навантаження на систему</div>
-              <div class="scale-bar-row">
-                <span class="scale-bar-label">Gyre</span>
-                <div class="scale-bar-track"><div class="scale-bar-fill" style="width:5%;background:var(--cyan);"></div></div>
-                <span style="font-family:var(--font-display);font-size:11px;color:var(--cyan);">~0%</span>
-              </div>
-              <div class="scale-bar-row">
-                <span class="scale-bar-label">OBS</span>
-                <div class="scale-bar-track"><div class="scale-bar-fill" style="width:65%;background:linear-gradient(90deg,#f59e0b,#ef4444);"></div></div>
-                <span style="font-family:var(--font-display);font-size:11px;color:#f59e0b;">60-80%</span>
-              </div>
-              <div class="scale-bar-row">
-                <span class="scale-bar-label">Ffmpeg</span>
-                <div class="scale-bar-track"><div class="scale-bar-fill" style="width:75%;background:linear-gradient(90deg,#ef4444,#dc2626);"></div></div>
-                <span style="font-family:var(--font-display);font-size:11px;color:#ef4444;">70-90%</span>
-              </div>
-            </div>
-          </div>
-        </div>
+<div class="toast" id="toast"></div>
 
-        <!-- Security -->
-        <div class="feat-card col-4">
-          <span class="feat-number">02</span>
-          <div class="feat-icon purple">🔑</div>
-          <h3 class="feat-title">Безпека через Stream Key</h3>
-          <p class="feat-desc">
-            Gyre ніколи не запитує пароль від вашого YouTube-каналу. Авторизація відбувається через email, а стрім запускається виключно через <strong style="color:var(--text-primary)">Stream Key (ключ потоку)</strong> — ваш канал залишається під повним контролем.
-          </p>
-        </div>
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const CATEGORIES = {
+  А: { color: '#5b8af0', bg: 'rgba(91,138,240,0.15)', label: 'А', name: 'Вуглеводи 1', items: [
+    { name: 'Лаваш', weight: 45, kcal: 110, prot: 3 },
+    { name: 'Картопля', weight: 100, kcal: 110, prot: 2 },
+    { name: 'Хліб цільнозерновий', weight: 50, kcal: 110, prot: 3 },
+    { name: 'Хлібці', weight: 45, kcal: 110, prot: 3 },
+    { name: 'Будь-яка крупа', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Рис (не шліфований)', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Цільнозернове борошно', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Бобові', weight: 30, kcal: 110, prot: 8 },
+    { name: 'Кукурудза свіжа', weight: 100, kcal: 110, prot: 3 },
+  ]},
+  Б: { color: '#d95f5f', bg: 'rgba(217,95,95,0.15)', label: 'Б', name: 'Молочне 1', items: [
+    { name: 'Йогурт несолодкий 1%', weight: 125, kcal: 65, prot: 4 },
+    { name: 'Сир кисломолочний 0.2%', weight: 70, kcal: 65, prot: 12 },
+    { name: 'Сири м\'які, тверді, плавлені', weight: 17, kcal: 65, prot: 4 },
+    { name: 'Кефір 1%', weight: 135, kcal: 65, prot: 4 },
+    { name: 'Молоко 1%', weight: 140, kcal: 65, prot: 4 },
+    { name: 'Сметана 15%', weight: 30, kcal: 65, prot: 1 },
+  ]},
+  В: { color: '#f0f0f0', bg: 'rgba(240,240,240,0.1)', label: 'В', name: 'Будь-що', items: [
+    { name: 'Будь-що (солодощі, снеки тощо)', weight: 90, kcal: 400, prot: 3 },
+  ]},
+  Г: { color: '#d4a017', bg: 'rgba(212,160,23,0.15)', label: 'Г', name: 'Вуглеводи 2', items: [
+    { name: 'Лаваш', weight: 45, kcal: 110, prot: 3 },
+    { name: 'Картопля', weight: 100, kcal: 110, prot: 2 },
+    { name: 'Хліб цільнозерновий', weight: 50, kcal: 110, prot: 3 },
+    { name: 'Хлібці', weight: 45, kcal: 110, prot: 3 },
+    { name: 'Будь-яка крупа', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Макарони т.с.', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Бобові', weight: 35, kcal: 110, prot: 8 },
+    { name: 'Рис (не шліфований)', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Цільнозернове борошно', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Кукурудза свіжа', weight: 100, kcal: 110, prot: 3 },
+  ]},
+  Д: { color: '#9060e0', bg: 'rgba(144,96,224,0.15)', label: 'Д', name: 'Білок 1', items: [
+    { name: 'Куряче або індиче філе', weight: 125, kcal: 105, prot: 20 },
+    { name: 'Телятина', weight: 100, kcal: 105, prot: 20 },
+    { name: 'Печінка', weight: 100, kcal: 105, prot: 18 },
+    { name: 'Риба від 5% жиру', weight: 100, kcal: 105, prot: 20 },
+    { name: 'Риба до 5% жиру', weight: 150, kcal: 105, prot: 20 },
+    { name: '2 яйця', weight: 100, kcal: 105, prot: 12 },
+    { name: 'Морепродукти', weight: 155, kcal: 105, prot: 20 },
+  ]},
+  Е: { color: '#d04080', bg: 'rgba(208,64,128,0.15)', label: 'Е', name: 'Овочі 1', items: [
+    { name: 'Овочі (квашені також і зелень)', weight: 300, kcal: 60, prot: 2 },
+    { name: 'Гриби', weight: 300, kcal: 60, prot: 3 },
+  ]},
+  Є: { color: '#808080', bg: 'rgba(128,128,128,0.15)', label: 'Є', name: 'Жири 1', items: [
+    { name: 'Будь-яка олія (рекомендуємо лляну)', weight: 7, kcal: 65, prot: 0 },
+    { name: 'Масло', weight: 8, kcal: 65, prot: 0 },
+    { name: 'Майонез', weight: 9, kcal: 65, prot: 0 },
+    { name: 'Кетчуп', weight: 30, kcal: 65, prot: 0 },
+    { name: 'Гірчиця', weight: 20, kcal: 65, prot: 0 },
+    { name: 'Оливки', weight: 55, kcal: 65, prot: 0 },
+    { name: 'Авокадо', weight: 40, kcal: 65, prot: 1 },
+  ]},
+  Ж: { color: '#e07830', bg: 'rgba(224,120,48,0.15)', label: 'Ж', name: 'Молочне 2', items: [
+    { name: 'Сир кисломолочний 0.2%', weight: 115, kcal: 100, prot: 18 },
+    { name: 'Сири м\'які, тверді, плавлені', weight: 25, kcal: 100, prot: 6 },
+    { name: 'Сметана 15%', weight: 55, kcal: 100, prot: 2 },
+    { name: 'Несолодкий йогурт 1%', weight: 205, kcal: 100, prot: 7 },
+    { name: 'Кефір 1%', weight: 215, kcal: 100, prot: 7 },
+  ]},
+  З: { color: '#40c080', bg: 'rgba(64,192,128,0.15)', label: 'З', name: 'Фрукти', items: [
+    { name: 'Фрукти та ягоди', weight: 230, kcal: 150, prot: 1 },
+    { name: 'Банани, виноград, хурма', weight: 140, kcal: 150, prot: 2 },
+  ]},
+  И: { color: '#806040', bg: 'rgba(128,96,64,0.15)', label: 'И', name: 'Горіхи', items: [
+    { name: 'Будь-які горіхи (рекомендуємо грецькі)', weight: 8, kcal: 50, prot: 1 },
+    { name: 'Насіння', weight: 8, kcal: 50, prot: 2 },
+  ]},
+  І: { color: '#9060e0', bg: 'rgba(144,96,224,0.15)', label: 'І', name: 'Білок 2', items: [
+    { name: 'Куряче або індиче філе', weight: 125, kcal: 105, prot: 20 },
+    { name: 'Телятина', weight: 100, kcal: 105, prot: 20 },
+    { name: 'Печінка', weight: 100, kcal: 105, prot: 18 },
+    { name: 'Риба від 5% жиру', weight: 100, kcal: 105, prot: 20 },
+    { name: 'Риба до 5% жиру', weight: 150, kcal: 105, prot: 20 },
+    { name: '2 яйця', weight: 100, kcal: 105, prot: 12 },
+    { name: 'Морепродукти', weight: 155, kcal: 105, prot: 20 },
+  ]},
+  Ї: { color: '#d04080', bg: 'rgba(208,64,128,0.15)', label: 'Ї', name: 'Овочі 2', items: [
+    { name: 'Овочі (квашені також і зелень)', weight: 300, kcal: 60, prot: 2 },
+    { name: 'Гриби', weight: 300, kcal: 60, prot: 3 },
+  ]},
+  Й: { color: '#808080', bg: 'rgba(128,128,128,0.15)', label: 'Й', name: 'Жири 2', items: [
+    { name: 'Будь-яка олія (рекомендуємо лляну)', weight: 7, kcal: 65, prot: 0 },
+    { name: 'Масло', weight: 8, kcal: 65, prot: 0 },
+    { name: 'Майонез', weight: 9, kcal: 65, prot: 0 },
+    { name: 'Кетчуп', weight: 30, kcal: 65, prot: 0 },
+    { name: 'Гірчиця', weight: 20, kcal: 65, prot: 0 },
+    { name: 'Авокадо', weight: 40, kcal: 65, prot: 1 },
+  ]},
+};
 
-        <!-- YouTube official -->
-        <div class="feat-card col-4">
-          <span class="feat-number">03</span>
-          <div class="feat-icon">▶️</div>
-          <h3 class="feat-title">Єдиний офіційний сервіс YouTube</h3>
-          <p class="feat-desc">
-            Gyre — єдиний інструмент для цілодобових стрімів, внесений до <strong style="color:var(--text-primary)">YouTube Service Directory</strong>. Це означає офіційну рекомендацію від YouTube і максимальну сумісність з платформою.
-          </p>
-        </div>
+const TOTAL_CATEGORIES = Object.keys(CATEGORIES).length;
+const DAILY_KCAL_GOAL = 1500;
+const DAILY_STEPS_GOAL = 7000;
 
-        <!-- Schedule -->
-        <div class="feat-card col-4">
-          <span class="feat-number">04</span>
-          <div class="feat-icon blue">📅</div>
-          <h3 class="feat-title">Розклад і плейлисти</h3>
-          <p class="feat-desc">
-            Організуйте контент у плейлисти з розкладом. Gyre автоматично переключає відео, зберігаючи стрім безперервним. Встановіть один раз — сервіс працює без вашої участі.
-          </p>
-        </div>
+const MEASURES = [
+  { key: 'weight', name: 'Вага', unit: 'кг', icon: '⚖️' },
+  { key: 'shoulder', name: 'Обхват плеча', unit: 'см', icon: '💪' },
+  { key: 'chest', name: 'Обхват грудей', unit: 'см', icon: '🫁' },
+  { key: 'waist', name: 'Обхват талії', unit: 'см', icon: '🧍' },
+  { key: 'hips', name: 'Обхват стегон', unit: 'см', icon: '🍑' },
+  { key: 'thigh', name: 'Обхват стегна', unit: 'см', icon: '🦵' },
+];
 
-        <!-- Scalability wide -->
-        <div class="feat-card col-8">
-          <span class="feat-number">05</span>
-          <div class="feat-wide-content">
-            <div>
-              <div class="feat-icon purple">🚀</div>
-              <h3 class="feat-title">Масштабування до 1000 одночасних стрімів</h3>
-              <p class="feat-desc">
-                Для великих медіакомпаній, музичних лейблів та мереж каналів — Enterprise-пакети з масштабуванням до будь-яких об'ємів. Керуйте сотнями Full HD трансляцій з єдиної панелі.
-              </p>
-              <ul class="feat-scale-list" style="margin-top:18px;">
-                <li>Пакети: 50, 100, 300, 500, 1000 стрімів</li>
-                <li>Централізована панель управління</li>
-                <li>Виділена підтримка для Enterprise-клієнтів</li>
-              </ul>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:var(--radius-md);padding:20px;text-align:center;">
-                <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--purple);line-height:1;">500</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">стрімів</div>
-              </div>
-              <div style="background:var(--cyan-dim);border:1px solid var(--border-accent);border-radius:var(--radius-md);padding:20px;text-align:center;">
-                <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--cyan);line-height:1;">1000</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">стрімів</div>
-              </div>
-              <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:var(--radius-md);padding:20px;text-align:center;">
-                <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--blue);line-height:1;">300</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">стрімів</div>
-              </div>
-              <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-md);padding:20px;text-align:center;">
-                <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--text-primary);line-height:1;">∞</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">можливості</div>
-              </div>
-            </div>
-          </div>
-        </div>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
 
-      </div>
-    </div>
-  </section>
+function getState() {
+  const raw = localStorage.getItem('fitness_state');
+  return raw ? JSON.parse(raw) : {};
+}
 
-  <div class="section-divider"></div>
+function saveState(s) {
+  localStorage.setItem('fitness_state', JSON.stringify(s));
+}
 
-  <!-- ===================== HOW IT WORKS ===================== -->
-  <section id="how">
-    <div class="container">
-      <div class="section-header">
-        <div class="tag">Як це працює</div>
-        <h2>Запуск за 4 кроки</h2>
-        <p>Від реєстрації до активного стріму — займає менше 10 хвилин.</p>
-      </div>
-      <div class="steps-grid">
-        <div class="step-item">
-          <div class="step-num">1</div>
-          <div class="step-title">Реєстрація</div>
-          <p class="step-desc">Зареєструйтесь через email. Паролі від YouTube-каналу не потрібні — ваш акаунт в безпеці.</p>
-        </div>
-        <div class="step-item">
-          <div class="step-num">2</div>
-          <div class="step-title">Завантаження відео</div>
-          <p class="step-desc">Завантажте заздалегідь записані відео в хмарне сховище Gyre або вкажіть посилання.</p>
-        </div>
-        <div class="step-item">
-          <div class="step-num">3</div>
-          <div class="step-title">Налаштування стріму</div>
-          <p class="step-desc">Вставте Stream Key з YouTube Studio, налаштуйте плейлист і розклад трансляції.</p>
-        </div>
-        <div class="step-item">
-          <div class="step-num">4</div>
-          <div class="step-title">Запуск 24/7</div>
-          <p class="step-desc">Натисніть «Старт» — Gyre транслює ваш контент безперервно в хмарі без участі ПК.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+function getTodayRation() {
+  const s = getState();
+  const key = todayKey();
+  if (!s.rations) s.rations = {};
+  if (!s.rations[key]) s.rations[key] = { meals: [{}, {}, {}, {}] };
+  return s.rations[key];
+}
 
-  <div class="section-divider"></div>
+function saveTodayRation(r) {
+  const s = getState();
+  if (!s.rations) s.rations = {};
+  s.rations[todayKey()] = r;
+  saveState(s);
+}
 
-  <!-- ===================== ENTERPRISE TARIFFS ===================== -->
-  <section id="enterprise">
-    <div class="container">
-      <div class="section-header">
-        <div class="tag">Enterprise</div>
-        <h2>Тарифи для великого<br>масштабу</h2>
-        <p>Від 50 до 1000 одночасних Full HD стрімів — оберіть пакет під розмір вашої мережі каналів.</p>
-      </div>
-      <div class="tariff-grid">
+function getTodaySteps() {
+  const s = getState();
+  if (!s.steps) return 0;
+  return s.steps[todayKey()] || 0;
+}
 
-        <div class="tariff-card">
-          <div class="tariff-tier">Старт</div>
-          <div class="tariff-streams">50</div>
-          <div class="tariff-streams-label">одночасних стрімів</div>
-          <div class="tariff-divider"></div>
-          <ul class="tariff-features">
-            <li>50 Full HD стрімів одночасно</li>
-            <li>Хмарне сховище для контенту</li>
-            <li>Stream Key авторизація</li>
-            <li>Підтримка через email</li>
-            <li>Базова аналітика</li>
-          </ul>
-          <a href="#cta-section" class="btn btn-ghost tariff-cta">Зв'язатись із нами</a>
-        </div>
+function saveTodaySteps(v) {
+  const s = getState();
+  if (!s.steps) s.steps = {};
+  s.steps[todayKey()] = v;
+  saveState(s);
+}
 
-        <div class="tariff-card featured">
-          <div class="tariff-featured-badge">Популярний</div>
-          <div class="tariff-tier">Бізнес</div>
-          <div class="tariff-streams">100</div>
-          <div class="tariff-streams-label">одночасних стрімів</div>
-          <div class="tariff-divider"></div>
-          <ul class="tariff-features">
-            <li>100 Full HD стрімів одночасно</li>
-            <li>Розширене хмарне сховище</li>
-            <li>Пріоритетна підтримка</li>
-            <li>Детальна аналітика та звіти</li>
-            <li>Управління декількома каналами</li>
-          </ul>
-          <a href="#cta-section" class="btn btn-primary tariff-cta">Зв'язатись із нами</a>
-        </div>
+function getMeasures() {
+  const s = getState();
+  return s.measures || {};
+}
 
-        <div class="tariff-card">
-          <div class="tariff-tier">Медіа</div>
-          <div class="tariff-streams">500</div>
-          <div class="tariff-streams-label">одночасних стрімів</div>
-          <div class="tariff-divider"></div>
-          <ul class="tariff-features">
-            <li>500 Full HD стрімів одночасно</li>
-            <li>Необмежене сховище</li>
-            <li>Виділений менеджер</li>
-            <li>SLA-угода</li>
-            <li>API-інтеграція</li>
-          </ul>
-          <a href="#cta-section" class="btn btn-ghost tariff-cta">Зв'язатись із нами</a>
-        </div>
+function saveMeasureEntry(key, val) {
+  const s = getState();
+  if (!s.measures) s.measures = {};
+  if (!s.measures[key]) s.measures[key] = [];
+  s.measures[key].push({ date: todayKey(), val });
+  saveState(s);
+}
 
-        <div class="tariff-card">
-          <div class="tariff-tier">Enterprise Max</div>
-          <div class="tariff-streams">1000</div>
-          <div class="tariff-streams-label">одночасних стрімів</div>
-          <div class="tariff-divider"></div>
-          <ul class="tariff-features">
-            <li>1000+ Full HD стрімів одночасно</li>
-            <li>Індивідуальна інфраструктура</li>
-            <li>Виділена технічна команда</li>
-            <li>Кастомізація під бренд</li>
-            <li>Пакети 300 / 500 / 1000 стрімів</li>
-          </ul>
-          <a href="#cta-section" class="btn btn-ghost tariff-cta">Обговорити умови</a>
-        </div>
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+let currentPage = 'home';
+let rationView = 'list'; // list | meal
+let currentMeal = 0;
+let measureView = 'list'; // list | entry | history
+let currentMeasureKey = '';
+let searchQuery = '';
 
-      </div>
-    </div>
-  </section>
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const pages = ['home','ration','steps','measures','analytics'];
+  document.querySelectorAll('.nav-btn')[pages.indexOf(page)].classList.add('active');
+  currentPage = page;
+  rationView = 'list';
+  measureView = 'list';
+  render();
+}
 
-  <div class="section-divider"></div>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
 
-  <!-- ===================== FAQ ===================== -->
-  <section id="faq">
-    <div class="container">
-      <div class="section-header">
-        <div class="tag">FAQ</div>
-        <h2>Відповіді на<br>поширені питання</h2>
-        <p>Зібрали найважливіші нюанси роботи з Gyre та платформою YouTube.</p>
-      </div>
-      <div class="faq-grid">
+function ring(pct, color, size = 72) {
+  const r = (size - 8) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - Math.min(pct / 100, 1) * circ;
+  return `<svg class="ring" viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px">
+    <circle class="ring-bg" cx="${size/2}" cy="${size/2}" r="${r}"/>
+    <circle class="ring-fg" cx="${size/2}" cy="${size/2}" r="${r}"
+      stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+    <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central"
+      class="ring-text" transform="rotate(90,${size/2},${size/2})" style="font-size:${size < 60 ? 10 : 13}px">${Math.round(pct)}%</text>
+  </svg>`;
+}
 
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            Чи потрібен пароль від YouTube-каналу?
-            <span class="faq-arrow">▾</span>
-          </button>
-          <div class="faq-answer">
-            <div class="faq-answer-inner">
-              Ні. Gyre ніколи не запитує пароль від вашого YouTube-каналу. Реєстрація відбувається через ваш email. Для запуску стріму використовується виключно <strong>Stream Key (ключ потоку)</strong> — стандартний безпечний механізм YouTube Studio. Ваш канал залишається повністю під вашим контролем.
-            </div>
-          </div>
-        </div>
+// ═══════════════════════════════════════════════
+// RENDER HOME
+// ═══════════════════════════════════════════════
+function renderHome() {
+  const ration = getTodayRation();
+  const steps = getTodaySteps();
 
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            Чи зберігаються стріми більше 12 годин на YouTube?
-            <span class="faq-arrow">▾</span>
-          </button>
-          <div class="faq-answer">
-            <div class="faq-answer-inner">
-              Важливий нюанс: YouTube не зберігає трансляції тривалістю понад 12 годин у вкладці «Трансляції» (Live). Після 12 годин відео або обрізається, або не зберігається автоматично. Це обмеження самої платформи YouTube, а не сервісу Gyre.
-              <div class="faq-warning">⚠️ Рекомендуємо враховувати цей ліміт при плануванні архівації трансляцій.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            Чи можна транслювати контент, що вже є на каналі?
-            <span class="faq-arrow">▾</span>
-          </button>
-          <div class="faq-answer">
-            <div class="faq-answer-inner">
-              Не рекомендуємо дублювати для стріму відео, які вже завантажені на ваш канал як публічні. YouTube може визначити це як дублікат контенту, що негативно впливає на видимість відео. Для стрімів краще використовувати окремо підготовлений контент або відео, яких немає у відкритому доступі на каналі.
-              <div class="faq-warning">⚠️ Дублювання публічного контенту може призвести до обмежень від YouTube.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            Що таке Pre-recorded Live Streaming?
-            <span class="faq-arrow">▾</span>
-          </button>
-          <div class="faq-answer">
-            <div class="faq-answer-inner">
-              Pre-recorded Live Streaming — це формат, при якому заздалегідь записане відео транслюється на YouTube у форматі прямого ефіру (Live). Для глядачів це виглядає як звичайна трансляція, але контент підготовлений заздалегідь. Gyre автоматично повторює відео в циклі, забезпечуючи безперервний 24/7 стрім.
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            Чи займається Gyre захистом або ліцензуванням відео (DRM)?
-            <span class="faq-arrow">▾</span>
-          </button>
-          <div class="faq-answer">
-            <div class="faq-answer-inner">
-              Ні. Gyre — це виключно інструмент для організації та запуску цілодобових трансляцій готового контенту. Сервіс не займається DRM, ліцензуванням відео чи захистом контенту від копіювання. Gyre вирішує задачу трансляції, а не захисту інтелектуальної власності.
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            Які платформи підтримуються?
-            <span class="faq-arrow">▾</span>
-          </button>
-          <div class="faq-answer">
-            <div class="faq-answer-inner">
-              Основна платформа — YouTube, де Gyre має офіційну рекомендацію та входить до YouTube Service Directory. Також підтримуються інші RTMP-сумісні платформи для стрімінгу. Зв'яжіться з нашою командою для уточнення переліку підтримуваних платформ для вашого конкретного кейсу.
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            Як виглядає процес для Enterprise-клієнтів?
-            <span class="faq-arrow">▾</span>
-          </button>
-          <div class="faq-answer">
-            <div class="faq-answer-inner">
-              Для великих компаній та медіамереж ми готуємо індивідуальну пропозицію. Після звернення виділений менеджер проводить демонстрацію, погоджує технічні вимоги та підписується SLA. Підтримуються пакети від 50 до 1000+ одночасних Full HD стрімів з централізованою панеллю управління.
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            Чи потрібен потужний сервер або ПК для роботи?
-            <span class="faq-arrow">▾</span>
-          </button>
-          <div class="faq-answer">
-            <div class="faq-answer-inner">
-              Абсолютно ні. Весь процес обробки, кодування та трансляції відбувається в хмарі Gyre. Ваш комп'ютер або сервер не задіяний у процесі стрімінгу. Все, що потрібно — доступ до браузера для налаштування, після чого стрім працює автономно 24/7.
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <div class="section-divider"></div>
-
-  <!-- ===================== CTA ===================== -->
-  <section id="cta-section">
-    <div class="container">
-      <div class="cta-box">
-        <div class="glow-blob b1"></div>
-        <div class="glow-blob b2"></div>
-        <div style="position:relative;z-index:1;">
-          <div class="tag" style="margin:0 auto 20px;">Почати зараз</div>
-          <h2 class="cta-title">Запустіть свій перший<br>24/7 стрім сьогодні</h2>
-          <p class="cta-subtitle">Єдиний офіційно рекомендований YouTube сервіс для цілодобового стрімінгу. Безпечно. Хмарно. Масштабовано.</p>
-          <div class="cta-buttons">
-            <a href="#" class="btn btn-primary">
-              Спробувати безкоштовно
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-            <a href="mailto:sales@gyre.io" class="btn btn-ghost">Зв'язатись із командою</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== FOOTER ===================== -->
-  <footer>
-    <div class="container">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <a href="#" class="logo">
-            <div class="logo-mark">G</div>
-            Gyre
-          </a>
-          <p>Хмарний B2B/Enterprise сервіс для цілодобового стрімінгу заздалегідь записаного контенту. Офіційно рекомендований YouTube.</p>
-          <div style="margin-top:20px;">
-            <div class="footer-yt-badge">
-              ▶ Офіційний партнер YouTube Service Directory
-            </div>
-          </div>
-        </div>
-        <div>
-          <div class="footer-col-title">Продукт</div>
-          <ul class="footer-links">
-            <li><a href="#features">Можливості</a></li>
-            <li><a href="#how">Як це працює</a></li>
-            <li><a href="#enterprise">Enterprise</a></li>
-            <li><a href="#faq">FAQ</a></li>
-          </ul>
-        </div>
-        <div>
-          <div class="footer-col-title">Компанія</div>
-          <ul class="footer-links">
-            <li><a href="#">Про нас</a></li>
-            <li><a href="#">Блог</a></li>
-            <li><a href="#">Кейси клієнтів</a></li>
-            <li><a href="#">Партнери</a></li>
-          </ul>
-        </div>
-        <div>
-          <div class="footer-col-title">Підтримка</div>
-          <ul class="footer-links">
-            <li><a href="mailto:support@gyre.io">support@gyre.io</a></li>
-            <li><a href="mailto:sales@gyre.io">sales@gyre.io</a></li>
-            <li><a href="#">Документація</a></li>
-            <li><a href="#">Умови використання</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <span class="footer-copy">© 2024 Gyre. Всі права захищені.</span>
-        <div style="display:flex;gap:20px;flex-wrap:wrap;">
-          <a href="#" style="font-size:12px;color:var(--text-muted);transition:var(--transition);" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--text-muted)'">Політика конфіденційності</a>
-          <a href="#" style="font-size:12px;color:var(--text-muted);transition:var(--transition);" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--text-muted)'">Умови сервісу</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ===================== SCRIPTS ===================== -->
-  <script>
-    // FAQ toggle
-    function toggleFaq(btn) {
-      const item = btn.closest('.faq-item');
-      const isOpen = item.classList.contains('open');
-      document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
-      if (!isOpen) item.classList.add('open');
-    }
-
-    // Mobile nav
-    document.getElementById('nav-toggle').addEventListener('click', function () {
-      const nav = document.getElementById('main-nav');
-      nav.classList.toggle('open');
-      this.textContent = nav.classList.contains('open') ? '✕' : '☰';
+  // calc totals
+  let totalKcal = 0, totalProt = 0, filledCats = 0;
+  ration.meals.forEach(meal => {
+    Object.entries(meal).forEach(([catKey, sel]) => {
+      if (!sel) return;
+      const cat = CATEGORIES[catKey];
+      const item = cat.items[sel.itemIdx];
+      const mult = sel.portion === 'full' ? 1 : 0.5;
+      totalKcal += item.kcal * mult;
+      totalProt += item.prot * mult;
+      if (sel.portion === 'full') filledCats++;
+      else filledCats += 0.5;
     });
+  });
 
-    // Scroll-in animation for cards
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.style.opacity = '1';
-          e.target.style.transform = 'translateY(0)';
-          observer.unobserve(e.target);
-        }
+  const kcalPct = Math.round(totalKcal / DAILY_KCAL_GOAL * 100);
+  const stepsPct = Math.round(steps / DAILY_STEPS_GOAL * 100);
+  const rationPct = Math.round(filledCats / TOTAL_CATEGORIES * 100);
+
+  document.getElementById('home-content').innerHTML = `
+    <div class="card">
+      <div class="ring-wrap">
+        <div class="ring-info">
+          <h3>Раціон сьогодні</h3>
+          <div class="big-num c-accent">${Math.round(totalKcal)}<span style="font-size:16px;font-weight:500"> ккал</span></div>
+          <div class="sub">Білок: ${Math.round(totalProt)} г &nbsp;·&nbsp; Ціль: ${DAILY_KCAL_GOAL} ккал</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(kcalPct,100)}%"></div></div>
+        </div>
+        ${ring(kcalPct, 'var(--accent)')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ring-wrap">
+        <div class="ring-info">
+          <h3>Кроки сьогодні</h3>
+          <div class="big-num c-accent2">${steps.toLocaleString('uk')}</div>
+          <div class="sub">Ціль: ${DAILY_STEPS_GOAL.toLocaleString('uk')} кроків</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(stepsPct,100)}%;background:var(--accent2)"></div></div>
+        </div>
+        ${ring(stepsPct, 'var(--accent2)')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ring-wrap">
+        <div class="ring-info">
+          <h3>Порції заповнено</h3>
+          <div class="big-num c-orange">${Math.round(filledCats)}/${TOTAL_CATEGORIES}</div>
+          <div class="sub">категорій виконано</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(rationPct,100)}%;background:var(--orange)"></div></div>
+        </div>
+        ${ring(rationPct, 'var(--orange)')}
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// RENDER RATION
+// ═══════════════════════════════════════════════
+function renderRation() {
+  const el = document.getElementById('ration-content');
+
+  if (rationView === 'list') {
+    const ration = getTodayRation();
+    let html = `<div class="page-title">Раціон</div>`;
+
+    const mealNames = ['Сніданок', 'Обід', 'Перекус', 'Вечеря'];
+    for (let i = 0; i < 4; i++) {
+      const meal = ration.meals[i];
+      const cats = Object.keys(meal).filter(k => meal[k]);
+      let kcal = 0, prot = 0;
+      cats.forEach(k => {
+        const item = CATEGORIES[k].items[meal[k].itemIdx];
+        const m = meal[k].portion === 'full' ? 1 : 0.5;
+        kcal += item.kcal * m; prot += item.prot * m;
       });
-    }, { threshold: 0.1 });
+      const summary = cats.length ? `${Math.round(kcal)} ккал · ${Math.round(prot)}г білка` : 'Порожньо';
+      html += `<div class="meal-row" onclick="openMeal(${i})">
+        <div class="meal-num">${i+1}</div>
+        <div class="meal-text">
+          <h4>${mealNames[i]}</h4>
+          <p>${summary}</p>
+        </div>
+        <span class="chevron">›</span>
+      </div>`;
+    }
+    el.innerHTML = html;
 
-    document.querySelectorAll('.feat-card, .tariff-card, .step-item, .faq-item').forEach((el, i) => {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(20px)';
-      el.style.transition = `opacity 0.5s ease ${i * 0.05}s, transform 0.5s ease ${i * 0.05}s, border-color 0.25s, box-shadow 0.25s, background 0.25s`;
-      observer.observe(el);
+  } else {
+    // meal detail
+    const ration = getTodayRation();
+    const meal = ration.meals[currentMeal];
+    const mealNames = ['Сніданок', 'Обід', 'Перекус', 'Вечеря'];
+
+    let searchHtml = `
+      <button class="back-btn" onclick="rationView='list';renderRation()">‹ Назад</button>
+      <div class="page-title">${mealNames[currentMeal]}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;padding:10px 12px;background:var(--surface2);border-radius:10px;">
+        💡 1 клік — ½ порції &nbsp;·&nbsp; 2 кліки — повна порція &nbsp;·&nbsp; 3 кліки — скасувати
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-field" placeholder="Пошук інгредієнтів..." 
+          oninput="searchQuery=this.value;renderRation()" value="${searchQuery}">
+      </div>
+    `;
+
+    // Calculate how many halves are used across ALL meals for each category
+    const catHalves = {};
+    ration.meals.forEach((m, mIdx) => {
+      Object.entries(m).forEach(([k, sel]) => {
+        if (!sel) return;
+        if (!catHalves[k]) catHalves[k] = 0;
+        catHalves[k] += sel.portion === 'full' ? 2 : 1;
+      });
     });
-  </script>
+
+    let listHtml = '';
+    Object.entries(CATEGORIES).forEach(([catKey, cat]) => {
+      const filtered = cat.items.filter(item =>
+        !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      if (!filtered.length) return;
+
+      listHtml += `<div class="section-title">${catKey} — ${cat.name}</div>`;
+      filtered.forEach((item) => {
+        const itemIdx = cat.items.indexOf(item);
+        const sel = meal[catKey];
+        const isSelected = sel && sel.itemIdx === itemIdx;
+        const isFull = isSelected && sel.portion === 'full';
+        const isHalf = isSelected && sel.portion === 'half';
+
+        // Total halves used in this category across all meals
+        const totalHalves = catHalves[catKey] || 0;
+        // Is this category fully used (2 halves) and NOT in current meal?
+        const isBlocked = totalHalves >= 2 && !isSelected;
+        // Is half used in another meal (not current)?
+        const halfElsewhere = totalHalves >= 1 && !isSelected;
+
+        let clickHandler = isBlocked ? '' : `onclick="toggleItem('${catKey}', ${itemIdx})"`;
+        let extraClass = isFull ? 'selected' : isHalf ? 'half-selected' : '';
+        let opacity = isBlocked ? 'opacity:0.3;pointer-events:none;' : '';
+        let badge = '';
+        if (isFull) badge = '<div class="portion-badge">Повна порція</div>';
+        else if (isHalf) badge = '<div class="portion-badge half">½ порції</div>';
+        else if (halfElsewhere && !isSelected) badge = '<div class="portion-badge half">½ вже є</div>';
+
+        listHtml += `
+          <div class="food-item ${extraClass}" style="${opacity}" ${clickHandler}>
+            <div class="cat-badge" style="background:${cat.bg};color:${cat.color}">${catKey}</div>
+            <div class="food-info">
+              <div class="food-name">${item.name}</div>
+              <div class="food-meta">${item.weight}г · ${item.kcal} ккал · ${item.prot}г білка</div>
+            </div>
+            ${badge}
+          </div>`;
+      });
+    });
+
+    el.innerHTML = searchHtml + listHtml;
+  }
+}
+
+function openMeal(idx) {
+  currentMeal = idx;
+  rationView = 'meal';
+  searchQuery = '';
+  renderRation();
+}
+
+function toggleItem(catKey, itemIdx) {
+  const ration = getTodayRation();
+  const meal = ration.meals[currentMeal];
+  const cur = meal[catKey];
+
+  // Count total halves across ALL meals for this category
+  let totalHalves = 0;
+  ration.meals.forEach((m, idx) => {
+    if (m[catKey]) totalHalves += m[catKey].portion === 'full' ? 2 : 1;
+  });
+  // Subtract current meal's contribution
+  if (cur) totalHalves -= cur.portion === 'full' ? 2 : 1;
+
+  if (!cur || cur.itemIdx !== itemIdx) {
+    // Only add if total (excluding current) < 2
+    if (totalHalves >= 2) return;
+    meal[catKey] = { itemIdx, portion: 'half' };
+  } else if (cur.portion === 'half') {
+    // Upgrade to full only if no halves elsewhere
+    if (totalHalves === 0) {
+      meal[catKey] = { itemIdx, portion: 'full' };
+    } else {
+      // Already a half elsewhere — remove from current meal
+      delete meal[catKey];
+    }
+  } else {
+    delete meal[catKey];
+  }
+
+  saveTodayRation(ration);
+  renderRation();
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════
+// RENDER STEPS
+// ═══════════════════════════════════════════════
+function renderSteps() {
+  const steps = getTodaySteps();
+  const pct = Math.round(steps / DAILY_STEPS_GOAL * 100);
+  const s = getState();
+  const stepsHistory = s.steps || {};
+  const entries = Object.entries(stepsHistory).sort((a,b) => b[0].localeCompare(a[0])).slice(0,7);
+
+  document.getElementById('steps-content').innerHTML = `
+    <div class="card" style="text-align:center;padding:30px 18px">
+      <div style="display:flex;justify-content:center;margin-bottom:16px">
+        ${ring(pct, 'var(--accent2)', 100)}
+      </div>
+      <div class="steps-big c-accent2">${steps.toLocaleString('uk')}</div>
+      <div class="steps-goal">Ціль: ${DAILY_STEPS_GOAL.toLocaleString('uk')} кроків</div>
+    </div>
+
+    <div class="input-wrap">
+      <div class="input-label">Кроки сьогодні</div>
+      <input class="input-field" type="number" id="steps-input" placeholder="Введи кількість кроків" value="${steps || ''}">
+    </div>
+    <button class="btn btn-primary" onclick="saveSteps()">Зберегти</button>
+
+    ${entries.length > 1 ? `
+      <div class="section-title">Останні 7 днів</div>
+      <div class="card">
+        ${entries.map(([date, val]) => `
+          <div class="hist-row">
+            <span class="hist-date">${date}</span>
+            <span class="hist-val c-accent2">${Number(val).toLocaleString('uk')}</span>
+          </div>`).join('')}
+      </div>` : ''}
+  `;
+}
+
+function saveSteps() {
+  const val = parseInt(document.getElementById('steps-input').value);
+  if (isNaN(val) || val < 0) { showToast('Введи коректне число'); return; }
+  saveTodaySteps(val);
+  showToast('🚶 Кроки збережено!');
+  renderSteps();
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════
+// RENDER MEASURES
+// ═══════════════════════════════════════════════
+function renderMeasures() {
+  const el = document.getElementById('measures-content');
+  const allMeasures = getMeasures();
+
+  if (measureView === 'list') {
+    let html = '';
+    MEASURES.forEach(m => {
+      const entries = allMeasures[m.key] || [];
+      const last = entries[entries.length - 1];
+      html += `<div class="measure-row" onclick="openMeasure('${m.key}')">
+        <div class="measure-left">
+          <span class="measure-icon">${m.icon}</span>
+          <span class="measure-name">${m.name}</span>
+        </div>
+        <span class="measure-val">${last ? last.val + ' ' + m.unit : '—'} ›</span>
+      </div>`;
+    });
+    el.innerHTML = html;
+
+  } else if (measureView === 'entry') {
+    const m = MEASURES.find(x => x.key === currentMeasureKey);
+    const entries = (getMeasures()[currentMeasureKey] || []).slice(-5).reverse();
+    el.innerHTML = `
+      <button class="back-btn" onclick="measureView='list';renderMeasures()">‹ Назад</button>
+      <div class="page-title">${m.icon} ${m.name}</div>
+      <div class="input-wrap">
+        <div class="input-label">Нове значення (${m.unit})</div>
+        <input class="input-field" type="number" step="0.1" id="measure-input" placeholder="Наприклад: ${m.key === 'weight' ? '65.5' : '38'}">
+      </div>
+      <button class="btn btn-primary" onclick="saveMeasure()">Зберегти</button>
+      ${entries.length ? `
+        <div class="section-title">Історія</div>
+        <div class="card">
+          ${entries.map(e => `
+            <div class="hist-row">
+              <span class="hist-date">${e.date}</span>
+              <span class="hist-val">${e.val} ${m.unit}</span>
+            </div>`).join('')}
+        </div>` : ''}
+    `;
+  }
+}
+
+function openMeasure(key) {
+  currentMeasureKey = key;
+  measureView = 'entry';
+  renderMeasures();
+}
+
+function saveMeasure() {
+  const val = parseFloat(document.getElementById('measure-input').value);
+  if (isNaN(val) || val <= 0) { showToast('Введи коректне значення'); return; }
+  saveMeasureEntry(currentMeasureKey, val);
+  const m = MEASURES.find(x => x.key === currentMeasureKey);
+  showToast(`${m.icon} ${m.name}: ${val} ${m.unit} збережено!`);
+  measureView = 'list';
+  renderMeasures();
+}
+
+// ═══════════════════════════════════════════════
+// RENDER ANALYTICS
+// ═══════════════════════════════════════════════
+function renderAnalytics() {
+  const s = getState();
+  const today = new Date();
+
+  // Last 7 days
+  const week = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    week.push(d.toISOString().slice(0, 10));
+  }
+
+  // Streak
+  let streak = 0;
+  let check = new Date(today);
+  while (true) {
+    const key = check.toISOString().slice(0, 10);
+    const hasRation = s.rations && s.rations[key] &&
+      s.rations[key].meals.some(m => Object.keys(m).length > 0);
+    const hasSteps = s.steps && s.steps[key];
+    if (!hasRation && !hasSteps) break;
+    streak++;
+    check.setDate(check.getDate() - 1);
+  }
+
+  // Weekly steps
+  const stepsData = week.map(d => (s.steps && s.steps[d]) || 0);
+  const totalSteps = stepsData.reduce((a, b) => a + b, 0);
+  const avgSteps = Math.round(totalSteps / 7);
+
+  // Weekly kcal
+  const kcalData = week.map(d => {
+    if (!s.rations || !s.rations[d]) return 0;
+    let kcal = 0;
+    s.rations[d].meals.forEach(meal => {
+      Object.entries(meal).forEach(([catKey, sel]) => {
+        if (!sel) return;
+        const item = CATEGORIES[catKey].items[sel.itemIdx];
+        kcal += item.kcal * (sel.portion === 'full' ? 1 : 0.5);
+      });
+    });
+    return Math.round(kcal);
+  });
+  const avgKcal = Math.round(kcalData.reduce((a, b) => a + b, 0) / 7);
+
+  // Weight history
+  const weightEntries = (s.measures && s.measures.weight) || [];
+  const lastWeight = weightEntries[weightEntries.length - 1];
+  const firstWeight = weightEntries[0];
+  const weightDiff = lastWeight && firstWeight ?
+    (lastWeight.val - firstWeight.val).toFixed(1) : null;
+
+  // Mini bar chart for steps
+  const maxSteps = Math.max(...stepsData, DAILY_STEPS_GOAL);
+  const stepsChart = stepsData.map((v, i) => {
+    const h = Math.round((v / maxSteps) * 60);
+    const isToday = i === 6;
+    const achieved = v >= DAILY_STEPS_GOAL;
+    const color = achieved ? 'var(--accent2)' : isToday ? 'var(--accent)' : 'var(--border)';
+    const day = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'][new Date(week[i]).getDay() === 0 ? 6 : new Date(week[i]).getDay() - 1];
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+      <div style="font-size:9px;color:var(--text3)">${v > 0 ? (v/1000).toFixed(1)+'к' : ''}</div>
+      <div style="width:100%;height:${Math.max(h,4)}px;background:${color};border-radius:4px;transition:height .3s"></div>
+      <div style="font-size:10px;color:${isToday ? 'var(--accent)' : 'var(--text3)'};font-weight:${isToday ? 700 : 400}">${day}</div>
+    </div>`;
+  }).join('');
+
+  // Kcal chart
+  const maxKcal = Math.max(...kcalData, DAILY_KCAL_GOAL);
+  const kcalChart = kcalData.map((v, i) => {
+    const h = Math.round((v / maxKcal) * 60);
+    const isToday = i === 6;
+    const achieved = v >= DAILY_KCAL_GOAL * 0.8;
+    const color = achieved ? 'var(--accent)' : isToday ? 'var(--orange)' : 'var(--border)';
+    const day = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'][new Date(week[i]).getDay() === 0 ? 6 : new Date(week[i]).getDay() - 1];
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+      <div style="font-size:9px;color:var(--text3)">${v > 0 ? v : ''}</div>
+      <div style="width:100%;height:${Math.max(h,4)}px;background:${color};border-radius:4px;transition:height .3s"></div>
+      <div style="font-size:10px;color:${isToday ? 'var(--accent)' : 'var(--text3)'};font-weight:${isToday ? 700 : 400}">${day}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('analytics-content').innerHTML = `
+    <div class="card">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">🔥 Стрік</div>
+      <div style="font-size:42px;font-weight:800;color:var(--orange)">${streak} <span style="font-size:16px;font-weight:500">днів</span></div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">поспіль з активністю</div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:4px">🚶 Кроки — тиждень</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Сер: ${avgSteps.toLocaleString('uk')} · Всього: ${totalSteps.toLocaleString('uk')}</div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:80px;padding-top:16px">
+        ${stepsChart}
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:4px">🍽 Калорії — тиждень</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Сер: ${avgKcal} ккал · Ціль: ${DAILY_KCAL_GOAL} ккал</div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:80px;padding-top:16px">
+        ${kcalChart}
+      </div>
+    </div>
+
+    ${weightEntries.length >= 2 ? `
+    <div class="card">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">⚖️ Динаміка ваги</div>
+      <div style="font-size:32px;font-weight:800;color:${weightDiff <= 0 ? 'var(--accent)' : 'var(--accent3)'}">
+        ${weightDiff > 0 ? '+' : ''}${weightDiff} кг
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">
+        з ${firstWeight.val} кг → ${lastWeight.val} кг
+      </div>
+      <div style="margin-top:12px">
+        ${weightEntries.slice(-7).map(e => `
+          <div class="hist-row">
+            <span class="hist-date">${e.date}</span>
+            <span class="hist-val">${e.val} кг</span>
+          </div>`).join('')}
+      </div>
+    </div>` : `
+    <div class="card" style="text-align:center;padding:24px">
+      <div style="font-size:32px;margin-bottom:8px">⚖️</div>
+      <div style="color:var(--text3);font-size:13px">Додай хоча б 2 записи ваги щоб побачити динаміку</div>
+    </div>`}
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════
+function render() {
+  if (currentPage === 'home') renderHome();
+  else if (currentPage === 'ration') renderRation();
+  else if (currentPage === 'steps') renderSteps();
+  else if (currentPage === 'measures') renderMeasures();
+  else if (currentPage === 'analytics') renderAnalytics();
+}
+
+// Init Telegram Web App
+if (window.Telegram && window.Telegram.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+}
+
+render();
+</script>
 </body>
 </html>
