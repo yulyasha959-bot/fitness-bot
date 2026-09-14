@@ -328,6 +328,11 @@
   <div id="analytics-content"></div>
 </div>
 
+<div id="page-if" class="page">
+  <div class="page-title">⏱ IF 16/8</div>
+  <div id="if-content"></div>
+</div>
+
 <!-- NAV -->
 <nav class="nav">
   <button class="nav-btn active" onclick="showPage('home')">
@@ -350,6 +355,10 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     Аналітика
   </button>
+  <button class="nav-btn" onclick="showPage('if')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    IF 16/8
+  </button>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -359,97 +368,98 @@
 // DATA
 // ═══════════════════════════════════════════════
 const CATEGORIES = {
+  // si = satiety index: 1=low🔴, 2=medium🟡, 3=high🟢
   А: { color: '#5b8af0', bg: 'rgba(91,138,240,0.15)', label: 'А', name: 'Вуглеводи 1', items: [
-    { name: 'Лаваш', weight: 45, kcal: 110, prot: 3 },
-    { name: 'Картопля', weight: 100, kcal: 110, prot: 2 },
-    { name: 'Хліб цільнозерновий', weight: 50, kcal: 110, prot: 3 },
-    { name: 'Хлібці', weight: 45, kcal: 110, prot: 3 },
-    { name: 'Будь-яка крупа', weight: 30, kcal: 110, prot: 3 },
-    { name: 'Рис (не шліфований)', weight: 30, kcal: 110, prot: 3 },
-    { name: 'Цільнозернове борошно', weight: 30, kcal: 110, prot: 3 },
-    { name: 'Бобові', weight: 30, kcal: 110, prot: 8 },
-    { name: 'Кукурудза свіжа', weight: 100, kcal: 110, prot: 3 },
+    { name: 'Лаваш', weight: 45, kcal: 110, prot: 3, si: 2 },
+    { name: 'Картопля', weight: 100, kcal: 110, prot: 2, si: 3 },
+    { name: 'Хліб цільнозерновий', weight: 50, kcal: 110, prot: 3, si: 3 },
+    { name: 'Хлібці', weight: 45, kcal: 110, prot: 3, si: 2 },
+    { name: 'Будь-яка крупа', weight: 30, kcal: 110, prot: 3, si: 3 },
+    { name: 'Рис (не шліфований)', weight: 30, kcal: 110, prot: 3, si: 2 },
+    { name: 'Цільнозернове борошно', weight: 30, kcal: 110, prot: 3, si: 2 },
+    { name: 'Бобові', weight: 30, kcal: 110, prot: 8, si: 3 },
+    { name: 'Кукурудза свіжа', weight: 100, kcal: 110, prot: 3, si: 2 },
   ]},
   Б: { color: '#d95f5f', bg: 'rgba(217,95,95,0.15)', label: 'Б', name: 'Молочне 1', items: [
-    { name: 'Йогурт несолодкий 1%', weight: 125, kcal: 65, prot: 4 },
-    { name: 'Сир кисломолочний 0.2%', weight: 70, kcal: 65, prot: 12 },
-    { name: 'Сири м\'які, тверді, плавлені', weight: 17, kcal: 65, prot: 4 },
-    { name: 'Кефір 1%', weight: 135, kcal: 65, prot: 4 },
-    { name: 'Молоко 1%', weight: 140, kcal: 65, prot: 4 },
-    { name: 'Сметана 15%', weight: 30, kcal: 65, prot: 1 },
+    { name: 'Йогурт несолодкий 1%', weight: 125, kcal: 65, prot: 4, si: 2 },
+    { name: 'Сир кисломолочний 0.2%', weight: 70, kcal: 65, prot: 12, si: 3 },
+    { name: 'Сири м\'які, тверді, плавлені', weight: 17, kcal: 65, prot: 4, si: 2 },
+    { name: 'Кефір 1%', weight: 135, kcal: 65, prot: 4, si: 2 },
+    { name: 'Молоко 1%', weight: 140, kcal: 65, prot: 4, si: 2 },
+    { name: 'Сметана 15%', weight: 30, kcal: 65, prot: 1, si: 1 },
   ]},
   В: { color: '#f0f0f0', bg: 'rgba(240,240,240,0.1)', label: 'В', name: 'Будь-що', items: [
-    { name: 'Будь-що (солодощі, снеки тощо)', weight: 90, kcal: 400, prot: 3 },
+    { name: 'Будь-що (солодощі, снеки тощо)', weight: 90, kcal: 400, prot: 3, si: 1 },
   ]},
   Г: { color: '#d4a017', bg: 'rgba(212,160,23,0.15)', label: 'Г', name: 'Вуглеводи 2', items: [
-    { name: 'Лаваш', weight: 45, kcal: 110, prot: 3 },
-    { name: 'Картопля', weight: 100, kcal: 110, prot: 2 },
-    { name: 'Хліб цільнозерновий', weight: 50, kcal: 110, prot: 3 },
-    { name: 'Хлібці', weight: 45, kcal: 110, prot: 3 },
-    { name: 'Будь-яка крупа', weight: 30, kcal: 110, prot: 3 },
-    { name: 'Макарони т.с.', weight: 30, kcal: 110, prot: 3 },
+    { name: 'Лаваш', weight: 45, kcal: 110, prot: 3, si: 2 },
+    { name: 'Картопля', weight: 100, kcal: 110, prot: 2, si: 3 },
+    { name: 'Хліб цільнозерновий', weight: 50, kcal: 110, prot: 3, si: 3 },
+    { name: 'Хлібці', weight: 45, kcal: 110, prot: 3, si: 2 },
+    { name: 'Будь-яка крупа', weight: 30, kcal: 110, prot: 3, si: 3 },
+    { name: 'Макарони т.с.', weight: 30, kcal: 110, prot: 3, si: 2 },
     { name: 'Бобові', weight: 35, kcal: 110, prot: 8 },
     { name: 'Рис (не шліфований)', weight: 30, kcal: 110, prot: 3 },
     { name: 'Цільнозернове борошно', weight: 30, kcal: 110, prot: 3 },
-    { name: 'Кукурудза свіжа', weight: 100, kcal: 110, prot: 3 },
+    { name: 'Кукурудза свіжа', weight: 100, kcal: 110, prot: 3, si: 2 },
   ]},
   Д: { color: '#9060e0', bg: 'rgba(144,96,224,0.15)', label: 'Д', name: 'Білок 1', items: [
-    { name: 'Куряче або індиче філе', weight: 125, kcal: 105, prot: 20 },
-    { name: 'Телятина', weight: 100, kcal: 105, prot: 20 },
-    { name: 'Печінка', weight: 100, kcal: 105, prot: 18 },
-    { name: 'Риба від 5% жиру', weight: 100, kcal: 105, prot: 20 },
-    { name: 'Риба до 5% жиру', weight: 150, kcal: 105, prot: 20 },
-    { name: '2 яйця', weight: 100, kcal: 105, prot: 12 },
-    { name: 'Морепродукти', weight: 155, kcal: 105, prot: 20 },
+    { name: 'Куряче або індиче філе', weight: 125, kcal: 105, prot: 20, si: 3 },
+    { name: 'Телятина', weight: 100, kcal: 105, prot: 20, si: 3 },
+    { name: 'Печінка', weight: 100, kcal: 105, prot: 18, si: 3 },
+    { name: 'Риба від 5% жиру', weight: 100, kcal: 105, prot: 20, si: 3 },
+    { name: 'Риба до 5% жиру', weight: 150, kcal: 105, prot: 20, si: 3 },
+    { name: '2 яйця', weight: 100, kcal: 105, prot: 12, si: 3 },
+    { name: 'Морепродукти', weight: 155, kcal: 105, prot: 20, si: 3 },
   ]},
   Е: { color: '#d04080', bg: 'rgba(208,64,128,0.15)', label: 'Е', name: 'Овочі 1', items: [
-    { name: 'Овочі (квашені також і зелень)', weight: 300, kcal: 60, prot: 2 },
-    { name: 'Гриби', weight: 300, kcal: 60, prot: 3 },
+    { name: 'Овочі (квашені також і зелень)', weight: 300, kcal: 60, prot: 2, si: 3 },
+    { name: 'Гриби', weight: 300, kcal: 60, prot: 3, si: 3 },
   ]},
   Є: { color: '#808080', bg: 'rgba(128,128,128,0.15)', label: 'Є', name: 'Жири 1', items: [
-    { name: 'Будь-яка олія (рекомендуємо лляну)', weight: 7, kcal: 65, prot: 0 },
-    { name: 'Масло', weight: 8, kcal: 65, prot: 0 },
-    { name: 'Майонез', weight: 9, kcal: 65, prot: 0 },
-    { name: 'Кетчуп', weight: 30, kcal: 65, prot: 0 },
-    { name: 'Гірчиця', weight: 20, kcal: 65, prot: 0 },
-    { name: 'Оливки', weight: 55, kcal: 65, prot: 0 },
-    { name: 'Авокадо', weight: 40, kcal: 65, prot: 1 },
+    { name: 'Будь-яка олія (рекомендуємо лляну)', weight: 7, kcal: 65, prot: 0, si: 1 },
+    { name: 'Масло', weight: 8, kcal: 65, prot: 0, si: 1 },
+    { name: 'Майонез', weight: 9, kcal: 65, prot: 0, si: 1 },
+    { name: 'Кетчуп', weight: 30, kcal: 65, prot: 0, si: 1 },
+    { name: 'Гірчиця', weight: 20, kcal: 65, prot: 0, si: 1 },
+    { name: 'Оливки', weight: 55, kcal: 65, prot: 0, si: 2 },
+    { name: 'Авокадо', weight: 40, kcal: 65, prot: 1, si: 2 },
   ]},
   Ж: { color: '#e07830', bg: 'rgba(224,120,48,0.15)', label: 'Ж', name: 'Молочне 2', items: [
-    { name: 'Сир кисломолочний 0.2%', weight: 115, kcal: 100, prot: 18 },
-    { name: 'Сири м\'які, тверді, плавлені', weight: 25, kcal: 100, prot: 6 },
-    { name: 'Сметана 15%', weight: 55, kcal: 100, prot: 2 },
-    { name: 'Несолодкий йогурт 1%', weight: 205, kcal: 100, prot: 7 },
-    { name: 'Кефір 1%', weight: 215, kcal: 100, prot: 7 },
+    { name: 'Сир кисломолочний 0.2%', weight: 115, kcal: 100, prot: 18, si: 3 },
+    { name: 'Сири м\'які, тверді, плавлені', weight: 25, kcal: 100, prot: 6, si: 2 },
+    { name: 'Сметана 15%', weight: 55, kcal: 100, prot: 2, si: 1 },
+    { name: 'Несолодкий йогурт 1%', weight: 205, kcal: 100, prot: 7, si: 2 },
+    { name: 'Кефір 1%', weight: 215, kcal: 100, prot: 7, si: 2 },
   ]},
   З: { color: '#40c080', bg: 'rgba(64,192,128,0.15)', label: 'З', name: 'Фрукти', items: [
-    { name: 'Фрукти та ягоди', weight: 230, kcal: 150, prot: 1 },
-    { name: 'Банани, виноград, хурма', weight: 140, kcal: 150, prot: 2 },
+    { name: 'Фрукти та ягоди', weight: 230, kcal: 150, prot: 1, si: 2 },
+    { name: 'Банани, виноград, хурма', weight: 140, kcal: 150, prot: 2, si: 2 },
   ]},
   И: { color: '#806040', bg: 'rgba(128,96,64,0.15)', label: 'И', name: 'Горіхи', items: [
-    { name: 'Будь-які горіхи (рекомендуємо грецькі)', weight: 8, kcal: 50, prot: 1 },
-    { name: 'Насіння', weight: 8, kcal: 50, prot: 2 },
+    { name: 'Будь-які горіхи (рекомендуємо грецькі)', weight: 8, kcal: 50, prot: 1, si: 2 },
+    { name: 'Насіння', weight: 8, kcal: 50, prot: 2, si: 2 },
   ]},
   І: { color: '#9060e0', bg: 'rgba(144,96,224,0.15)', label: 'І', name: 'Білок 2', items: [
-    { name: 'Куряче або індиче філе', weight: 125, kcal: 105, prot: 20 },
-    { name: 'Телятина', weight: 100, kcal: 105, prot: 20 },
-    { name: 'Печінка', weight: 100, kcal: 105, prot: 18 },
-    { name: 'Риба від 5% жиру', weight: 100, kcal: 105, prot: 20 },
-    { name: 'Риба до 5% жиру', weight: 150, kcal: 105, prot: 20 },
-    { name: '2 яйця', weight: 100, kcal: 105, prot: 12 },
-    { name: 'Морепродукти', weight: 155, kcal: 105, prot: 20 },
+    { name: 'Куряче або індиче філе', weight: 125, kcal: 105, prot: 20, si: 3 },
+    { name: 'Телятина', weight: 100, kcal: 105, prot: 20, si: 3 },
+    { name: 'Печінка', weight: 100, kcal: 105, prot: 18, si: 3 },
+    { name: 'Риба від 5% жиру', weight: 100, kcal: 105, prot: 20, si: 3 },
+    { name: 'Риба до 5% жиру', weight: 150, kcal: 105, prot: 20, si: 3 },
+    { name: '2 яйця', weight: 100, kcal: 105, prot: 12, si: 3 },
+    { name: 'Морепродукти', weight: 155, kcal: 105, prot: 20, si: 3 },
   ]},
   Ї: { color: '#d04080', bg: 'rgba(208,64,128,0.15)', label: 'Ї', name: 'Овочі 2', items: [
-    { name: 'Овочі (квашені також і зелень)', weight: 300, kcal: 60, prot: 2 },
-    { name: 'Гриби', weight: 300, kcal: 60, prot: 3 },
+    { name: 'Овочі (квашені також і зелень)', weight: 300, kcal: 60, prot: 2, si: 3 },
+    { name: 'Гриби', weight: 300, kcal: 60, prot: 3, si: 3 },
   ]},
   Й: { color: '#808080', bg: 'rgba(128,128,128,0.15)', label: 'Й', name: 'Жири 2', items: [
-    { name: 'Будь-яка олія (рекомендуємо лляну)', weight: 7, kcal: 65, prot: 0 },
-    { name: 'Масло', weight: 8, kcal: 65, prot: 0 },
-    { name: 'Майонез', weight: 9, kcal: 65, prot: 0 },
-    { name: 'Кетчуп', weight: 30, kcal: 65, prot: 0 },
-    { name: 'Гірчиця', weight: 20, kcal: 65, prot: 0 },
-    { name: 'Авокадо', weight: 40, kcal: 65, prot: 1 },
+    { name: 'Будь-яка олія (рекомендуємо лляну)', weight: 7, kcal: 65, prot: 0, si: 1 },
+    { name: 'Масло', weight: 8, kcal: 65, prot: 0, si: 1 },
+    { name: 'Майонез', weight: 9, kcal: 65, prot: 0, si: 1 },
+    { name: 'Кетчуп', weight: 30, kcal: 65, prot: 0, si: 1 },
+    { name: 'Гірчиця', weight: 20, kcal: 65, prot: 0, si: 1 },
+    { name: 'Авокадо', weight: 40, kcal: 65, prot: 1, si: 2 },
   ]},
 };
 
@@ -537,8 +547,9 @@ function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
-  const pages = ['home','ration','steps','measures','analytics'];
-  document.querySelectorAll('.nav-btn')[pages.indexOf(page)].classList.add('active');
+  const pages = ['home','ration','steps','measures','analytics','if'];
+  const idx = pages.indexOf(page);
+  if (idx >= 0) document.querySelectorAll('.nav-btn')[idx].classList.add('active');
   currentPage = page;
   rationView = 'list';
   measureView = 'list';
@@ -568,6 +579,38 @@ function ring(pct, color, size = 72) {
 // ═══════════════════════════════════════════════
 // RENDER HOME
 // ═══════════════════════════════════════════════
+function getSIEmoji(si) {
+  if (si === 3) return '<span style="color:#4caf50;font-size:11px">🟢</span>';
+  if (si === 2) return '<span style="color:#ff9800;font-size:11px">🟡</span>';
+  return '<span style="color:#f44336;font-size:11px">🔴</span>';
+}
+
+function getIFStatus() {
+  const s = getState();
+  const startHour = s.ifStart !== undefined ? s.ifStart : 12;
+  const endHour = startHour + 8;
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMinutes = startHour * 60;
+  const endMinutes = endHour * 60;
+
+  const inWindow = currentMinutes >= startMinutes && currentMinutes < endMinutes;
+  let remainMinutes;
+  if (inWindow) {
+    remainMinutes = endMinutes - currentMinutes;
+  } else if (currentMinutes < startMinutes) {
+    remainMinutes = startMinutes - currentMinutes;
+  } else {
+    remainMinutes = 24 * 60 - currentMinutes + startMinutes;
+  }
+
+  const hours = Math.floor(remainMinutes / 60);
+  const mins = remainMinutes % 60;
+  const pct = inWindow ? Math.round((currentMinutes - startMinutes) / 480 * 100) : 0;
+
+  return { inWindow, hours, mins, pct, startHour, endHour };
+}
+
 function renderHome() {
   const ration = getTodayRation();
   const steps = getTodaySteps();
@@ -591,7 +634,26 @@ function renderHome() {
   const stepsPct = Math.round(steps / DAILY_STEPS_GOAL * 100);
   const rationPct = Math.round(filledCats / TOTAL_CATEGORIES * 100);
 
+  const if_ = getIFStatus();
+  const ifColor = if_.inWindow ? 'var(--accent)' : 'var(--text3)';
+  const ifLabel = if_.inWindow ? '🟢 Вікно їжі відкрите' : '🔴 Голодування';
+  const ifNext = if_.inWindow
+    ? `Закриється через ${if_.hours}г ${if_.mins}хв`
+    : `Відкриється через ${if_.hours}г ${if_.mins}хв`;
+
   document.getElementById('home-content').innerHTML = `
+    <div class="card" style="cursor:pointer" onclick="showPage('if')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:4px">⏱ Інтервальне голодування 16/8</div>
+          <div style="font-size:16px;font-weight:700;color:${ifColor}">${ifLabel}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${ifNext}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Вікно: ${if_.startHour}:00 — ${if_.endHour}:00</div>
+        </div>
+        ${ring(if_.inWindow ? if_.pct : 0, if_.inWindow ? 'var(--accent)' : 'var(--border)')}
+      </div>
+    </div>
+
     <div class="card">
       <div class="ring-wrap">
         <div class="ring-info">
@@ -721,11 +783,12 @@ function renderRation() {
         else if (isHalf) badge = '<div class="portion-badge half">½ порції</div>';
         else if (halfElsewhere && !isSelected) badge = '<div class="portion-badge half">½ вже є</div>';
 
+        const siEmoji = item.si ? getSIEmoji(item.si) : '';
         listHtml += `
           <div class="food-item ${extraClass}" style="${opacity}" ${clickHandler}>
             <div class="cat-badge" style="background:${cat.bg};color:${cat.color}">${catKey}</div>
             <div class="food-info">
-              <div class="food-name">${item.name}</div>
+              <div class="food-name">${item.name} ${siEmoji}</div>
               <div class="food-meta">${item.weight}г · ${item.kcal} ккал · ${item.prot}г білка</div>
             </div>
             ${badge}
@@ -887,6 +950,79 @@ function saveMeasure() {
 }
 
 // ═══════════════════════════════════════════════
+// RENDER IF
+// ═══════════════════════════════════════════════
+function renderIF() {
+  const s = getState();
+  const startHour = s.ifStart !== undefined ? s.ifStart : 12;
+  const endHour = startHour + 8;
+  const if_ = getIFStatus();
+
+  // Big ring
+  const pct = if_.inWindow ? if_.pct : 0;
+  const bigRing = ring(pct, if_.inWindow ? 'var(--accent)' : 'var(--border)', 120);
+
+  document.getElementById('if-content').innerHTML = `
+    <div class="card" style="text-align:center;padding:24px">
+      <div style="display:flex;justify-content:center;margin-bottom:16px">${bigRing}</div>
+      <div style="font-size:20px;font-weight:800;color:${if_.inWindow ? 'var(--accent)' : 'var(--text2)'}">
+        ${if_.inWindow ? '🟢 Їж зараз!' : '🔴 Голодування'}
+      </div>
+      <div style="font-size:14px;color:var(--text2);margin-top:8px">
+        ${if_.inWindow ? `Вікно закриється через ${if_.hours}г ${if_.mins}хв` : `Вікно відкриється через ${if_.hours}г ${if_.mins}хв`}
+      </div>
+      <div style="font-size:13px;color:var(--text3);margin-top:6px">
+        Вікно їжі: ${startHour}:00 — ${endHour}:00
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600">Налаштування вікна їжі</div>
+      <div class="input-label">Початок вікна їжі (година)</div>
+      <input class="input-field" type="number" id="if-start" min="6" max="16" value="${startHour}" placeholder="12">
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;margin-bottom:12px">
+        Вікно їжі: з ${startHour}:00 до ${endHour}:00 (8 годин)
+      </div>
+      <button class="btn btn-primary" onclick="saveIFSettings()">Зберегти</button>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600">💡 Поради для IF 16/8</div>
+      <div style="font-size:13px;color:var(--text3);line-height:1.6">
+        • Під час голодування можна пити воду, чай, каву без цукру<br>
+        • Перший прийом їжі — найкраще збалансований (білок + овочі)<br>
+        • Уникай калорійних страв ближче до кінця вікна<br>
+        • Тренування добре робити за 1-2 години до вікна або на початку<br>
+        • При -10 кг за 3 місяці орієнтуйся на ~1200-1400 ккал на день
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px;font-weight:600">🎯 Твоя ціль</div>
+      <div style="font-size:32px;font-weight:800;color:var(--accent)">-10 кг</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">за 3 місяці · ~-0.8 кг/тиждень</div>
+      <div style="margin-top:12px;font-size:13px;color:var(--text3)">
+        Безпечний темп: 0.5-1 кг на тиждень ✅
+      </div>
+    </div>
+  `;
+}
+
+function saveIFSettings() {
+  const val = parseInt(document.getElementById('if-start').value);
+  if (isNaN(val) || val < 6 || val > 16) {
+    showToast('Введи годину від 6 до 16');
+    return;
+  }
+  const s = getState();
+  s.ifStart = val;
+  saveState(s);
+  showToast(`✅ Вікно їжі: ${val}:00 — ${val+8}:00`);
+  renderIF();
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════
 // RENDER ANALYTICS
 // ═══════════════════════════════════════════════
 function renderAnalytics() {
@@ -1027,7 +1163,11 @@ function render() {
   else if (currentPage === 'steps') renderSteps();
   else if (currentPage === 'measures') renderMeasures();
   else if (currentPage === 'analytics') renderAnalytics();
+  else if (currentPage === 'if') renderIF();
 }
+
+// Auto-refresh home every minute for IF timer
+setInterval(() => { if (currentPage === 'home' || currentPage === 'if') render(); }, 60000);
 
 // Init Telegram Web App
 if (window.Telegram && window.Telegram.WebApp) {
