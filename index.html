@@ -7,319 +7,102 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
-
   :root {
-    --bg: #0f0f0f;
-    --surface: #1a1a1a;
-    --surface2: #222222;
-    --border: #2a2a2a;
-    --text: #f0f0f0;
-    --text2: #888;
-    --text3: #555;
-    --accent: #c8f060;
-    --accent2: #60d4f0;
-    --accent3: #f06060;
-    --orange: #f0a060;
-    --purple: #a060f0;
-    --pink: #f060c0;
-    --teal: #60f0c0;
-    --radius: 16px;
-    --radius-sm: 10px;
+    --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #222;
+    --border: #2a2a2a; --text: #f0f0f0; --text2: #888; --text3: #555;
+    --accent: #c8f060; --accent2: #60d4f0; --accent3: #f06060;
+    --orange: #f0a060; --purple: #a060f0; --radius: 16px; --radius-sm: 10px;
   }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:'Manrope',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:90px; overflow-x:hidden; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  .nav { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); display:flex; z-index:100; padding-bottom:env(safe-area-inset-bottom); }
+  .nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 2px; border:none; background:none; color:var(--text3); font-family:'Manrope',sans-serif; font-size:9px; font-weight:600; cursor:pointer; }
+  .nav-btn.active { color:var(--accent); }
+  .nav-btn svg { width:20px; height:20px; }
 
-  body {
-    font-family: 'Manrope', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-    padding-bottom: 80px;
-  }
+  .page { display:none; padding:16px; }
+  .page.active { display:block; }
+  .page-title { font-size:26px; font-weight:800; margin-bottom:16px; letter-spacing:-0.5px; }
 
-  /* NAV */
-  .nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    display: flex;
-    z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .nav-btn {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 10px 4px;
-    border: none;
-    background: none;
-    color: var(--text3);
-    font-family: 'Manrope', sans-serif;
-    font-size: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: color .2s;
-  }
-  .nav-btn.active { color: var(--accent); }
-  .nav-btn svg { width: 22px; height: 22px; }
+  .card { background:var(--surface); border-radius:var(--radius); padding:16px; margin-bottom:10px; border:1px solid var(--border); }
+  .card-title { font-size:12px; color:var(--text2); font-weight:600; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
 
-  /* PAGES */
-  .page { display: none; padding: 16px; }
-  .page.active { display: block; }
+  /* KCAL BAR */
+  .kcal-bar-wrap { height:8px; background:var(--border); border-radius:4px; margin:8px 0; overflow:hidden; }
+  .kcal-bar-fill { height:8px; border-radius:4px; transition:width .5s ease, background .3s; }
 
-  /* HEADER */
-  .page-title {
-    font-size: 28px;
-    font-weight: 800;
-    margin-bottom: 20px;
-    letter-spacing: -0.5px;
-  }
+  /* MEAL CARD */
+  .meal-card { background:var(--surface); border-radius:var(--radius); margin-bottom:10px; border:1px solid var(--border); overflow:hidden; }
+  .meal-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; cursor:pointer; }
+  .meal-header:active { background:var(--surface2); }
+  .meal-title { font-size:15px; font-weight:700; }
+  .meal-kcal { font-size:12px; color:var(--text2); }
+  .meal-body { display:none; padding:0 16px 16px; }
+  .meal-body.open { display:block; }
 
-  /* CARDS */
-  .card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    padding: 18px;
-    margin-bottom: 12px;
-    border: 1px solid var(--border);
-  }
+  /* GROUP */
+  .group-label { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 6px; }
+  .food-item { display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:10px; cursor:pointer; margin-bottom:4px; transition:background .15s; }
+  .food-item:active { background:var(--surface2); }
+  .food-item.selected { background:rgba(200,240,96,0.1); border:1px solid rgba(200,240,96,0.3); }
+  .food-item.half { background:rgba(200,240,96,0.05); border:1px solid rgba(200,240,96,0.15); }
+  .food-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .food-info { flex:1; }
+  .food-name { font-size:13px; font-weight:600; }
+  .food-meta { font-size:11px; color:var(--text2); margin-top:1px; }
+  .food-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+  .badge-full { background:rgba(200,240,96,0.2); color:var(--accent); }
+  .badge-half { background:rgba(128,128,128,0.2); color:var(--text3); border:1px dashed var(--text3); }
+  .optional-tag { font-size:10px; color:var(--text3); background:var(--surface2); padding:1px 6px; border-radius:4px; }
 
-  /* PROGRESS RING */
-  .ring-wrap {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .ring-info h3 { font-size: 13px; color: var(--text2); font-weight: 500; margin-bottom: 4px; }
-  .ring-info .big-num { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
-  .ring-info .sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
-  .ring-info .bar-wrap { margin-top: 10px; height: 4px; background: var(--border); border-radius: 2px; width: 180px; }
-  .ring-info .bar-fill { height: 4px; border-radius: 2px; background: var(--accent); transition: width .5s ease; }
-
-  svg.ring { width: 72px; height: 72px; transform: rotate(-90deg); }
-  .ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
-  .ring-fg { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
-  .ring-text { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 13px; fill: var(--text); }
-
-  /* CATEGORY BADGE */
-  .cat-badge {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 800;
-    flex-shrink: 0;
-  }
-
-  /* FOOD ITEM */
-  .food-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background .15s;
-    border-radius: 8px;
-    padding-left: 8px;
-    padding-right: 8px;
-    margin: 0 -8px;
-  }
-  .food-item:last-child { border-bottom: none; }
-  .food-item:active { background: var(--surface2); }
-  .food-item.selected { background: rgba(200,240,96,0.08); border-color: rgba(200,240,96,0.2); }
-  .food-item.half-selected { background: rgba(200,240,96,0.04); border-color: rgba(200,240,96,0.1); }
-
-  .food-info { flex: 1; }
-  .food-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-  .food-meta { font-size: 11px; color: var(--text2); }
-
-  .portion-badge {
-    font-size: 10px; font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 20px;
-    border: 1.5px dashed var(--accent);
-    color: var(--accent);
-    white-space: nowrap;
-  }
-  .portion-badge.half { border-color: var(--text3); color: var(--text3); }
-
-  /* SECTION TITLE */
-  .section-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text3);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin: 20px 0 10px;
-  }
-
-  /* MEAL ROW */
-  .meal-row {
-    display: flex; align-items: center; gap: 14px;
-    padding: 14px;
-    background: var(--surface);
-    border-radius: var(--radius-sm);
-    margin-bottom: 8px;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    transition: border-color .2s;
-  }
-  .meal-row:active { border-color: var(--accent); }
-  .meal-num {
-    width: 32px; height: 32px;
-    background: var(--surface2);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 800;
-    color: var(--text2);
-  }
-  .meal-text { flex: 1; }
-  .meal-text h4 { font-size: 14px; font-weight: 600; }
-  .meal-text p { font-size: 11px; color: var(--text2); margin-top: 2px; }
-  .chevron { color: var(--text3); font-size: 18px; }
-
-  /* BACK BUTTON */
-  .back-btn {
-    display: flex; align-items: center; gap: 6px;
-    background: none; border: none;
-    color: var(--text2); font-family: 'Manrope', sans-serif;
-    font-size: 14px; font-weight: 600;
-    cursor: pointer; margin-bottom: 16px;
-    padding: 4px 0;
-  }
+  /* RING */
+  svg.ring { transform:rotate(-90deg); }
+  .ring-bg { fill:none; stroke:var(--border); stroke-width:6; }
+  .ring-fg { fill:none; stroke-width:6; stroke-linecap:round; transition:stroke-dashoffset .6s ease, stroke .3s; }
+  .ring-text { font-family:'Manrope',sans-serif; font-weight:800; fill:var(--text); }
 
   /* INPUT */
-  .input-wrap { margin-bottom: 16px; }
-  .input-label { font-size: 12px; color: var(--text2); font-weight: 600; margin-bottom: 6px; }
-  .input-field {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 14px 16px;
-    color: var(--text);
-    font-family: 'Manrope', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    outline: none;
-    transition: border-color .2s;
-  }
-  .input-field:focus { border-color: var(--accent); }
+  .input-field { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-family:'Manrope',sans-serif; font-size:16px; font-weight:600; outline:none; }
+  .input-field:focus { border-color:var(--accent); }
+  .btn { width:100%; padding:14px; border-radius:var(--radius-sm); border:none; font-family:'Manrope',sans-serif; font-size:14px; font-weight:700; cursor:pointer; }
+  .btn-primary { background:var(--accent); color:#111; }
+  .btn:active { opacity:.8; }
 
-  /* BUTTON */
-  .btn {
-    width: 100%;
-    padding: 16px;
-    border-radius: var(--radius-sm);
-    border: none;
-    font-family: 'Manrope', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: opacity .2s;
-  }
-  .btn:active { opacity: 0.8; }
-  .btn-primary { background: var(--accent); color: #111; }
-  .btn-secondary { background: var(--surface2); color: var(--text); margin-top: 8px; }
+  /* HIST */
+  .hist-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .hist-row:last-child { border:none; }
 
-  /* MEASURE ROW */
-  .measure-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px;
-    background: var(--surface);
-    border-radius: var(--radius-sm);
-    margin-bottom: 8px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-  }
-  .measure-row:active { border-color: var(--accent2); }
-  .measure-left { display: flex; align-items: center; gap: 12px; }
-  .measure-icon { font-size: 20px; }
-  .measure-name { font-size: 14px; font-weight: 600; }
-  .measure-val { font-size: 14px; font-weight: 700; color: var(--text2); }
-
-  /* SEARCH */
-  .search-wrap { position: relative; margin-bottom: 16px; }
-  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 16px; }
-  .search-field {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 12px 16px 12px 42px;
-    color: var(--text);
-    font-family: 'Manrope', sans-serif;
-    font-size: 14px;
-    outline: none;
-  }
-  .search-field:focus { border-color: var(--accent); }
-  .search-field::placeholder { color: var(--text3); }
+  /* MEASURE */
+  .measure-row { display:flex; align-items:center; justify-content:space-between; padding:14px; background:var(--surface); border-radius:var(--radius-sm); margin-bottom:8px; border:1px solid var(--border); cursor:pointer; }
 
   /* TOAST */
-  .toast {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: var(--surface);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-size: 13px; font-weight: 600;
-    opacity: 0; transition: all .3s;
-    pointer-events: none; white-space: nowrap;
-    z-index: 200;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast { position:fixed; bottom:95px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--surface); border:1px solid var(--accent); color:var(--accent); padding:10px 20px; border-radius:30px; font-size:13px; font-weight:600; opacity:0; transition:all .3s; pointer-events:none; white-space:nowrap; z-index:200; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* HISTORY LIST */
-  .hist-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-  }
-  .hist-row:last-child { border-bottom: none; }
-  .hist-date { color: var(--text2); }
-  .hist-val { font-weight: 700; }
-
-  /* STEPS DISPLAY */
-  .steps-big { font-size: 56px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
-  .steps-goal { font-size: 13px; color: var(--text2); margin-top: 6px; }
-
-  /* COLOR UTILS */
-  .c-accent { color: var(--accent); }
-  .c-accent2 { color: var(--accent2); }
-  .c-orange { color: var(--orange); }
-  .c-purple { color: var(--purple); }
-
-  /* EMPTY STATE */
-  .empty { text-align: center; padding: 40px 20px; color: var(--text3); }
-  .empty-icon { font-size: 48px; margin-bottom: 12px; }
-  .empty p { font-size: 14px; }
+  /* WEEKLY BALANCE */
+  .balance-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:700; }
 </style>
 </head>
 <body>
 
-<!-- PAGES -->
 <div id="page-home" class="page active">
   <div class="page-title">Головна 👋</div>
   <div id="home-content"></div>
 </div>
 
 <div id="page-ration" class="page">
+  <div class="page-title">Раціон 🍽</div>
   <div id="ration-content"></div>
 </div>
 
 <div id="page-steps" class="page">
-  <div class="page-title">Кроки</div>
+  <div class="page-title">Кроки 🚶</div>
   <div id="steps-content"></div>
 </div>
 
 <div id="page-measures" class="page">
-  <div class="page-title">Заміри</div>
+  <div class="page-title">Заміри 📏</div>
   <div id="measures-content"></div>
 </div>
 
@@ -333,14 +116,13 @@
   <div id="if-content"></div>
 </div>
 
-<!-- NAV -->
 <nav class="nav">
   <button class="nav-btn active" onclick="showPage('home')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     Головна
   </button>
   <button class="nav-btn" onclick="showPage('ration')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/></svg>
     Раціон
   </button>
   <button class="nav-btn" onclick="showPage('steps')">
@@ -364,108 +146,124 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════
-// DATA
-// ═══════════════════════════════════════════════
-const CATEGORIES = {
-  // si = satiety index: 1=low🔴, 2=medium🟡, 3=high🟢
-  А: { color: '#5b8af0', bg: 'rgba(91,138,240,0.15)', label: 'А', name: 'Вуглеводи 1', items: [
-    { name: 'Лаваш', weight: 45, kcal: 110, prot: 3, si: 2 },
-    { name: 'Картопля', weight: 100, kcal: 110, prot: 2, si: 3 },
-    { name: 'Хліб цільнозерновий', weight: 50, kcal: 110, prot: 3, si: 3 },
-    { name: 'Хлібці', weight: 45, kcal: 110, prot: 3, si: 2 },
-    { name: 'Будь-яка крупа', weight: 30, kcal: 110, prot: 3, si: 3 },
-    { name: 'Рис (не шліфований)', weight: 30, kcal: 110, prot: 3, si: 2 },
-    { name: 'Цільнозернове борошно', weight: 30, kcal: 110, prot: 3, si: 2 },
-    { name: 'Бобові', weight: 30, kcal: 110, prot: 8, si: 3 },
-    { name: 'Кукурудза свіжа', weight: 100, kcal: 110, prot: 3, si: 2 },
-  ]},
-  Б: { color: '#d95f5f', bg: 'rgba(217,95,95,0.15)', label: 'Б', name: 'Молочне 1', items: [
-    { name: 'Йогурт несолодкий 1%', weight: 125, kcal: 65, prot: 4, si: 2 },
-    { name: 'Сир кисломолочний 0.2%', weight: 70, kcal: 65, prot: 12, si: 3 },
-    { name: 'Сири м\'які, тверді, плавлені', weight: 17, kcal: 65, prot: 4, si: 2 },
-    { name: 'Кефір 1%', weight: 135, kcal: 65, prot: 4, si: 2 },
-    { name: 'Молоко 1%', weight: 140, kcal: 65, prot: 4, si: 2 },
-    { name: 'Сметана 15%', weight: 30, kcal: 65, prot: 1, si: 1 },
-  ]},
-  В: { color: '#f0f0f0', bg: 'rgba(240,240,240,0.1)', label: 'В', name: 'Будь-що', items: [
-    { name: 'Будь-що (солодощі, снеки тощо)', weight: 90, kcal: 400, prot: 3, si: 1 },
-  ]},
-  Г: { color: '#d4a017', bg: 'rgba(212,160,23,0.15)', label: 'Г', name: 'Вуглеводи 2', items: [
-    { name: 'Лаваш', weight: 45, kcal: 110, prot: 3, si: 2 },
-    { name: 'Картопля', weight: 100, kcal: 110, prot: 2, si: 3 },
-    { name: 'Хліб цільнозерновий', weight: 50, kcal: 110, prot: 3, si: 3 },
-    { name: 'Хлібці', weight: 45, kcal: 110, prot: 3, si: 2 },
-    { name: 'Будь-яка крупа', weight: 30, kcal: 110, prot: 3, si: 3 },
-    { name: 'Макарони т.с.', weight: 30, kcal: 110, prot: 3, si: 2 },
-    { name: 'Бобові', weight: 35, kcal: 110, prot: 8 },
-    { name: 'Рис (не шліфований)', weight: 30, kcal: 110, prot: 3 },
-    { name: 'Цільнозернове борошно', weight: 30, kcal: 110, prot: 3 },
-    { name: 'Кукурудза свіжа', weight: 100, kcal: 110, prot: 3, si: 2 },
-  ]},
-  Д: { color: '#9060e0', bg: 'rgba(144,96,224,0.15)', label: 'Д', name: 'Білок 1', items: [
-    { name: 'Куряче або індиче філе', weight: 125, kcal: 105, prot: 20, si: 3 },
-    { name: 'Телятина', weight: 100, kcal: 105, prot: 20, si: 3 },
-    { name: 'Печінка', weight: 100, kcal: 105, prot: 18, si: 3 },
-    { name: 'Риба від 5% жиру', weight: 100, kcal: 105, prot: 20, si: 3 },
-    { name: 'Риба до 5% жиру', weight: 150, kcal: 105, prot: 20, si: 3 },
-    { name: '2 яйця', weight: 100, kcal: 105, prot: 12, si: 3 },
-    { name: 'Морепродукти', weight: 155, kcal: 105, prot: 20, si: 3 },
-  ]},
-  Е: { color: '#d04080', bg: 'rgba(208,64,128,0.15)', label: 'Е', name: 'Овочі 1', items: [
-    { name: 'Овочі (квашені також і зелень)', weight: 300, kcal: 60, prot: 2, si: 3 },
-    { name: 'Гриби', weight: 300, kcal: 60, prot: 3, si: 3 },
-  ]},
-  Є: { color: '#808080', bg: 'rgba(128,128,128,0.15)', label: 'Є', name: 'Жири 1', items: [
-    { name: 'Будь-яка олія (рекомендуємо лляну)', weight: 7, kcal: 65, prot: 0, si: 1 },
-    { name: 'Масло', weight: 8, kcal: 65, prot: 0, si: 1 },
-    { name: 'Майонез', weight: 9, kcal: 65, prot: 0, si: 1 },
-    { name: 'Кетчуп', weight: 30, kcal: 65, prot: 0, si: 1 },
-    { name: 'Гірчиця', weight: 20, kcal: 65, prot: 0, si: 1 },
-    { name: 'Оливки', weight: 55, kcal: 65, prot: 0, si: 2 },
-    { name: 'Авокадо', weight: 40, kcal: 65, prot: 1, si: 2 },
-  ]},
-  Ж: { color: '#e07830', bg: 'rgba(224,120,48,0.15)', label: 'Ж', name: 'Молочне 2', items: [
-    { name: 'Сир кисломолочний 0.2%', weight: 115, kcal: 100, prot: 18, si: 3 },
-    { name: 'Сири м\'які, тверді, плавлені', weight: 25, kcal: 100, prot: 6, si: 2 },
-    { name: 'Сметана 15%', weight: 55, kcal: 100, prot: 2, si: 1 },
-    { name: 'Несолодкий йогурт 1%', weight: 205, kcal: 100, prot: 7, si: 2 },
-    { name: 'Кефір 1%', weight: 215, kcal: 100, prot: 7, si: 2 },
-  ]},
-  З: { color: '#40c080', bg: 'rgba(64,192,128,0.15)', label: 'З', name: 'Фрукти', items: [
-    { name: 'Фрукти та ягоди', weight: 230, kcal: 150, prot: 1, si: 2 },
-    { name: 'Банани, виноград, хурма', weight: 140, kcal: 150, prot: 2, si: 2 },
-  ]},
-  И: { color: '#806040', bg: 'rgba(128,96,64,0.15)', label: 'И', name: 'Горіхи', items: [
-    { name: 'Будь-які горіхи (рекомендуємо грецькі)', weight: 8, kcal: 50, prot: 1, si: 2 },
-    { name: 'Насіння', weight: 8, kcal: 50, prot: 2, si: 2 },
-  ]},
-  І: { color: '#9060e0', bg: 'rgba(144,96,224,0.15)', label: 'І', name: 'Білок 2', items: [
-    { name: 'Куряче або індиче філе', weight: 125, kcal: 105, prot: 20, si: 3 },
-    { name: 'Телятина', weight: 100, kcal: 105, prot: 20, si: 3 },
-    { name: 'Печінка', weight: 100, kcal: 105, prot: 18, si: 3 },
-    { name: 'Риба від 5% жиру', weight: 100, kcal: 105, prot: 20, si: 3 },
-    { name: 'Риба до 5% жиру', weight: 150, kcal: 105, prot: 20, si: 3 },
-    { name: '2 яйця', weight: 100, kcal: 105, prot: 12, si: 3 },
-    { name: 'Морепродукти', weight: 155, kcal: 105, prot: 20, si: 3 },
-  ]},
-  Ї: { color: '#d04080', bg: 'rgba(208,64,128,0.15)', label: 'Ї', name: 'Овочі 2', items: [
-    { name: 'Овочі (квашені також і зелень)', weight: 300, kcal: 60, prot: 2, si: 3 },
-    { name: 'Гриби', weight: 300, kcal: 60, prot: 3, si: 3 },
-  ]},
-  Й: { color: '#808080', bg: 'rgba(128,128,128,0.15)', label: 'Й', name: 'Жири 2', items: [
-    { name: 'Будь-яка олія (рекомендуємо лляну)', weight: 7, kcal: 65, prot: 0, si: 1 },
-    { name: 'Масло', weight: 8, kcal: 65, prot: 0, si: 1 },
-    { name: 'Майонез', weight: 9, kcal: 65, prot: 0, si: 1 },
-    { name: 'Кетчуп', weight: 30, kcal: 65, prot: 0, si: 1 },
-    { name: 'Гірчиця', weight: 20, kcal: 65, prot: 0, si: 1 },
-    { name: 'Авокадо', weight: 40, kcal: 65, prot: 1, si: 2 },
-  ]},
-};
-
-const TOTAL_CATEGORIES = Object.keys(CATEGORIES).length;
-const DAILY_KCAL_GOAL = 1500;
+// ═══════════════════════════════════════════
+// MEAL STRUCTURE
+// ═══════════════════════════════════════════
+const DAILY_KCAL_GOAL = 1300;
 const DAILY_STEPS_GOAL = 7000;
+
+const MEALS = [
+  {
+    id: 'breakfast', name: 'Сніданок', icon: '🌅', targetKcal: 350,
+    groups: [
+      { id: 'protein', name: 'Білок', icon: '🥩', required: true, items: [
+        { name: 'Яйця', weight: 100, unit: '2 шт', kcal: 143, prot: 13, si: 3 },
+        { name: 'Сир кисломолочний 0.2%', weight: 150, unit: '150г', kcal: 120, prot: 26, si: 3 },
+        { name: 'Йогурт несолодкий 1%', weight: 200, unit: '200г', kcal: 100, prot: 8, si: 2 },
+        { name: 'Кефір 1%', weight: 250, unit: '250г', kcal: 113, prot: 8, si: 2 },
+        { name: 'Сир твердий', weight: 30, unit: '30г', kcal: 108, prot: 8, si: 2 },
+      ]},
+      { id: 'carbs', name: 'Вуглеводи', icon: '🍞', required: true, items: [
+        { name: 'Вівсянка суха', weight: 40, unit: '40г сухої', kcal: 138, prot: 5, si: 3 },
+        { name: 'Хліб цільнозерновий', weight: 50, unit: '50г', kcal: 115, prot: 4, si: 3 },
+        { name: 'Лаваш', weight: 45, unit: '45г', kcal: 120, prot: 4, si: 2 },
+        { name: 'Гречка суха', weight: 40, unit: '40г сухої', kcal: 132, prot: 5, si: 3 },
+        { name: 'Хлібці', weight: 30, unit: '30г (3-4 шт)', kcal: 103, prot: 3, si: 2 },
+      ]},
+      { id: 'fiber', name: 'Клітковина', icon: '🥗', required: true, items: [
+        { name: 'Овочі свіжі/квашені', weight: 200, unit: '200г', kcal: 50, prot: 2, si: 3 },
+        { name: 'Гриби', weight: 150, unit: '150г', kcal: 30, prot: 3, si: 3 },
+        { name: 'Зелень + огірок', weight: 200, unit: '200г', kcal: 30, prot: 2, si: 3 },
+      ]},
+      { id: 'fats', name: 'Жири', icon: '🧈', required: false, items: [
+        { name: 'Олія лляна', weight: 7, unit: '7г (1 ч.л.)', kcal: 62, prot: 0, si: 1 },
+        { name: 'Авокадо', weight: 40, unit: '40г (¼ шт)', kcal: 64, prot: 1, si: 2 },
+        { name: 'Горіхи грецькі', weight: 15, unit: '15г (3-4 шт)', kcal: 98, prot: 2, si: 2 },
+      ]},
+    ]
+  },
+  {
+    id: 'lunch', name: 'Обід', icon: '🌞', targetKcal: 450,
+    groups: [
+      { id: 'protein', name: 'Білок', icon: '🥩', required: true, items: [
+        { name: 'Куряче філе (сире)', weight: 150, unit: '150г', kcal: 165, prot: 35, si: 3 },
+        { name: 'Риба нежирна (сира)', weight: 180, unit: '180г', kcal: 144, prot: 36, si: 3 },
+        { name: 'Телятина (сира)', weight: 130, unit: '130г', kcal: 169, prot: 26, si: 3 },
+        { name: 'Печінка куряча', weight: 130, unit: '130г', kcal: 150, prot: 26, si: 3 },
+        { name: 'Морепродукти', weight: 180, unit: '180г', kcal: 139, prot: 28, si: 3 },
+      ]},
+      { id: 'carbs', name: 'Вуглеводи', icon: '🍞', required: true, items: [
+        { name: 'Крупа будь-яка (суха)', weight: 50, unit: '50г сухої', kcal: 175, prot: 5, si: 3 },
+        { name: 'Макарони т.с. (сухі)', weight: 50, unit: '50г сухих', kcal: 175, prot: 6, si: 2 },
+        { name: 'Картопля (сира)', weight: 150, unit: '150г', kcal: 120, prot: 3, si: 3 },
+        { name: 'Рис нешліфований (сухий)', weight: 50, unit: '50г сухого', kcal: 175, prot: 4, si: 2 },
+        { name: 'Бобові (сухі)', weight: 40, unit: '40г сухих', kcal: 132, prot: 10, si: 3 },
+      ]},
+      { id: 'fiber', name: 'Клітковина', icon: '🥗', required: true, items: [
+        { name: 'Овочі (будь-які)', weight: 300, unit: '300г', kcal: 75, prot: 3, si: 3 },
+        { name: 'Гриби', weight: 300, unit: '300г', kcal: 60, prot: 6, si: 3 },
+        { name: 'Змішані овочі + зелень', weight: 300, unit: '300г', kcal: 65, prot: 3, si: 3 },
+      ]},
+      { id: 'fats', name: 'Жири', icon: '🧈', required: false, items: [
+        { name: 'Олія (для смаження/заправки)', weight: 7, unit: '7г', kcal: 62, prot: 0, si: 1 },
+        { name: 'Майонез', weight: 10, unit: '10г (1 ч.л.)', kcal: 33, prot: 0, si: 1 },
+        { name: 'Авокадо', weight: 40, unit: '40г', kcal: 64, prot: 1, si: 2 },
+      ]},
+    ]
+  },
+  {
+    id: 'snack', name: 'Перекус', icon: '🍎', targetKcal: 200,
+    groups: [
+      { id: 'fruits', name: 'Фрукти або молочне', icon: '🍎', required: true, items: [
+        { name: 'Фрукти та ягоди', weight: 250, unit: '250г', kcal: 125, prot: 1, si: 2 },
+        { name: 'Банан', weight: 120, unit: '1 шт (120г)', kcal: 107, prot: 1, si: 2 },
+        { name: 'Кефір 1%', weight: 250, unit: '250г', kcal: 113, prot: 8, si: 2 },
+        { name: 'Йогурт несолодкий 1%', weight: 200, unit: '200г', kcal: 100, prot: 8, si: 2 },
+        { name: 'Сир кисломолочний 0.2%', weight: 100, unit: '100г', kcal: 80, prot: 17, si: 3 },
+      ]},
+      { id: 'nuts', name: 'Горіхи (необов\'язково)', icon: '🥜', required: false, items: [
+        { name: 'Горіхи грецькі', weight: 15, unit: '15г (3-4 шт)', kcal: 98, prot: 2, si: 2 },
+        { name: 'Мигдаль', weight: 15, unit: '15г (10-12 шт)', kcal: 87, prot: 3, si: 2 },
+        { name: 'Насіння', weight: 15, unit: '15г', kcal: 86, prot: 3, si: 2 },
+      ]},
+    ]
+  },
+  {
+    id: 'dinner', name: 'Вечеря', icon: '🌙', targetKcal: 350,
+    groups: [
+      { id: 'protein', name: 'Білок', icon: '🥩', required: true, items: [
+        { name: 'Куряче філе (сире)', weight: 130, unit: '130г', kcal: 143, prot: 30, si: 3 },
+        { name: 'Риба нежирна (сира)', weight: 160, unit: '160г', kcal: 128, prot: 32, si: 3 },
+        { name: 'Морепродукти', weight: 180, unit: '180г', kcal: 139, prot: 28, si: 3 },
+        { name: 'Яйця', weight: 100, unit: '2 шт', kcal: 143, prot: 13, si: 3 },
+        { name: 'Телятина (сира)', weight: 110, unit: '110г', kcal: 143, prot: 22, si: 3 },
+      ]},
+      { id: 'carbs', name: 'Вуглеводи', icon: '🍞', required: true, items: [
+        { name: 'Крупа будь-яка (суха)', weight: 40, unit: '40г сухої', kcal: 140, prot: 4, si: 3 },
+        { name: 'Картопля (сира)', weight: 120, unit: '120г', kcal: 96, prot: 2, si: 3 },
+        { name: 'Рис нешліфований (сухий)', weight: 40, unit: '40г сухого', kcal: 140, prot: 3, si: 2 },
+        { name: 'Бобові (сухі)', weight: 35, unit: '35г сухих', kcal: 116, prot: 8, si: 3 },
+        { name: 'Макарони т.с. (сухі)', weight: 40, unit: '40г сухих', kcal: 140, prot: 5, si: 2 },
+      ]},
+      { id: 'fiber', name: 'Клітковина (подвійна!)', icon: '🥗', required: true, items: [
+        { name: 'Овочі (будь-які)', weight: 400, unit: '400г', kcal: 100, prot: 4, si: 3 },
+        { name: 'Гриби + овочі', weight: 400, unit: '400г', kcal: 90, prot: 6, si: 3 },
+        { name: 'Квашені + свіжі овочі', weight: 400, unit: '400г', kcal: 80, prot: 4, si: 3 },
+      ]},
+      { id: 'fats', name: 'Жири', icon: '🧈', required: false, items: [
+        { name: 'Олія лляна', weight: 7, unit: '7г', kcal: 62, prot: 0, si: 1 },
+        { name: 'Авокадо', weight: 40, unit: '40г', kcal: 64, prot: 1, si: 2 },
+      ]},
+    ]
+  },
+];
+
+const BONUS = {
+  id: 'bonus', name: 'Будь-що 🎉', icon: '✨',
+  items: [
+    { name: 'Будь-що (солодощі, снеки тощо)', weight: 90, unit: 'до 200 ккал', kcal: 200, prot: 2, si: 1 },
+  ]
+};
 
 const MEASURES = [
   { key: 'weight', name: 'Вага', unit: 'кг', icon: '⚖️' },
@@ -476,55 +274,28 @@ const MEASURES = [
   { key: 'thigh', name: 'Обхват стегна', unit: 'см', icon: '🦵' },
 ];
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 // STATE
-// ═══════════════════════════════════════════════
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function getState() {
-  const raw = localStorage.getItem('fitness_state');
-  return raw ? JSON.parse(raw) : {};
-}
-
-function saveState(s) {
-  localStorage.setItem('fitness_state', JSON.stringify(s));
-}
+// ═══════════════════════════════════════════
+function todayKey() { return new Date().toISOString().slice(0,10); }
+function getState() { try { return JSON.parse(localStorage.getItem('fitness_v2')||'{}'); } catch(e) { return {}; } }
+function saveState(s) { localStorage.setItem('fitness_v2', JSON.stringify(s)); }
 
 function getTodayRation() {
   const s = getState();
-  const key = todayKey();
   if (!s.rations) s.rations = {};
-  if (!s.rations[key]) s.rations[key] = { meals: [{}, {}, {}, {}] };
-  return s.rations[key];
+  if (!s.rations[todayKey()]) s.rations[todayKey()] = { meals: {}, bonus: null };
+  return s.rations[todayKey()];
 }
-
 function saveTodayRation(r) {
   const s = getState();
   if (!s.rations) s.rations = {};
   s.rations[todayKey()] = r;
   saveState(s);
 }
-
-function getTodaySteps() {
-  const s = getState();
-  if (!s.steps) return 0;
-  return s.steps[todayKey()] || 0;
-}
-
-function saveTodaySteps(v) {
-  const s = getState();
-  if (!s.steps) s.steps = {};
-  s.steps[todayKey()] = v;
-  saveState(s);
-}
-
-function getMeasures() {
-  const s = getState();
-  return s.measures || {};
-}
-
+function getTodaySteps() { const s = getState(); return (s.steps && s.steps[todayKey()]) || 0; }
+function saveTodaySteps(v) { const s = getState(); if (!s.steps) s.steps = {}; s.steps[todayKey()] = v; saveState(s); }
+function getMeasures() { return getState().measures || {}; }
 function saveMeasureEntry(key, val) {
   const s = getState();
   if (!s.measures) s.measures = {};
@@ -533,26 +304,66 @@ function saveMeasureEntry(key, val) {
   saveState(s);
 }
 
-// ═══════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════
+// ─── Weekly balance ───────────────────────
+function getWeeklyBalance() {
+  const s = getState();
+  if (!s.rations) return 0;
+  let total = 0;
+  const today = new Date();
+  for (let i = 1; i <= 6; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    if (s.rations[key]) {
+      const dayKcal = calcRationKcal(s.rations[key]);
+      total += dayKcal - DAILY_KCAL_GOAL;
+    }
+  }
+  return Math.round(total / 6); // avg daily surplus/deficit
+}
+
+function calcRationKcal(ration) {
+  let total = 0;
+  MEALS.forEach(meal => {
+    const mealSel = ration.meals[meal.id] || {};
+    meal.groups.forEach(group => {
+      const sel = mealSel[group.id];
+      if (sel) {
+        const item = group.items[sel.idx];
+        if (item) total += item.kcal * (sel.portion === 'full' ? 1 : 0.5);
+      }
+    });
+  });
+  if (ration.bonus) {
+    total += BONUS.items[0].kcal * (ration.bonus === 'full' ? 1 : 0.5);
+  }
+  return Math.round(total);
+}
+
+function getTodayKcal() { return calcRationKcal(getTodayRation()); }
+
+function getEffectiveGoal() {
+  const balance = getWeeklyBalance();
+  if (balance > 100) return Math.max(1100, DAILY_KCAL_GOAL - Math.round(balance * 0.5));
+  if (balance < -100) return Math.min(1500, DAILY_KCAL_GOAL + Math.round(Math.abs(balance) * 0.3));
+  return DAILY_KCAL_GOAL;
+}
+
+// ═══════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════
 let currentPage = 'home';
-let rationView = 'list'; // list | meal
-let currentMeal = 0;
-let measureView = 'list'; // list | entry | history
+let openMeal = null;
+let measureView = 'list';
 let currentMeasureKey = '';
-let searchQuery = '';
 
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('page-'+page).classList.add('active');
   const pages = ['home','ration','steps','measures','analytics','if'];
   const idx = pages.indexOf(page);
   if (idx >= 0) document.querySelectorAll('.nav-btn')[idx].classList.add('active');
   currentPage = page;
-  rationView = 'list';
-  measureView = 'list';
   render();
 }
 
@@ -563,618 +374,481 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-function ring(pct, color, size = 72) {
-  const r = (size - 8) / 2;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - Math.min(pct / 100, 1) * circ;
-  return `<svg class="ring" viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px">
+function ring(pct, color, size=72) {
+  const r = (size-8)/2, circ = 2*Math.PI*r;
+  const offset = circ - Math.min(pct/100,1)*circ;
+  return `<svg class="ring" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
     <circle class="ring-bg" cx="${size/2}" cy="${size/2}" r="${r}"/>
-    <circle class="ring-fg" cx="${size/2}" cy="${size/2}" r="${r}"
-      stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
-    <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central"
-      class="ring-text" transform="rotate(90,${size/2},${size/2})" style="font-size:${size < 60 ? 10 : 13}px">${Math.round(pct)}%</text>
+    <circle class="ring-fg" cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+    <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central" class="ring-text" transform="rotate(90,${size/2},${size/2})" style="font-size:${size<80?10:13}px">${Math.round(pct)}%</text>
   </svg>`;
 }
 
-// ═══════════════════════════════════════════════
-// RENDER HOME
-// ═══════════════════════════════════════════════
-function getSIEmoji(si) {
-  if (si === 3) return '<span style="color:#4caf50;font-size:11px">🟢</span>';
-  if (si === 2) return '<span style="color:#ff9800;font-size:11px">🟡</span>';
-  return '<span style="color:#f44336;font-size:11px">🔴</span>';
+function kcalColor(kcal, goal) {
+  const pct = kcal / goal;
+  if (pct < 0.85) return 'var(--accent)';
+  if (pct < 1.0) return 'var(--orange)';
+  return 'var(--accent3)';
 }
 
+function siEmoji(si) {
+  if (si === 3) return '🟢';
+  if (si === 2) return '🟡';
+  return '🔴';
+}
+
+// ═══════════════════════════════════════════
+// IF HELPERS
+// ═══════════════════════════════════════════
 function getIFStatus() {
   const s = getState();
   const startHour = s.ifStart !== undefined ? s.ifStart : 12;
   const endHour = startHour + 8;
   const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const startMinutes = startHour * 60;
-  const endMinutes = endHour * 60;
-
-  const inWindow = currentMinutes >= startMinutes && currentMinutes < endMinutes;
-  let remainMinutes;
-  if (inWindow) {
-    remainMinutes = endMinutes - currentMinutes;
-  } else if (currentMinutes < startMinutes) {
-    remainMinutes = startMinutes - currentMinutes;
-  } else {
-    remainMinutes = 24 * 60 - currentMinutes + startMinutes;
-  }
-
-  const hours = Math.floor(remainMinutes / 60);
-  const mins = remainMinutes % 60;
-  const pct = inWindow ? Math.round((currentMinutes - startMinutes) / 480 * 100) : 0;
-
-  return { inWindow, hours, mins, pct, startHour, endHour };
+  const cur = now.getHours()*60 + now.getMinutes();
+  const start = startHour*60, end = endHour*60;
+  const inWindow = cur >= start && cur < end;
+  let remain = inWindow ? end-cur : cur < start ? start-cur : 24*60-cur+start;
+  return { inWindow, hours: Math.floor(remain/60), mins: remain%60,
+    pct: inWindow ? Math.round((cur-start)/480*100) : 0, startHour, endHour };
 }
 
+// ═══════════════════════════════════════════
+// RENDER HOME
+// ═══════════════════════════════════════════
 function renderHome() {
-  const ration = getTodayRation();
+  const kcal = getTodayKcal();
+  const goal = getEffectiveGoal();
   const steps = getTodaySteps();
+  const pct = Math.round(kcal/goal*100);
+  const color = kcalColor(kcal, goal);
+  const stepsPct = Math.round(steps/DAILY_STEPS_GOAL*100);
+  const if_ = getIFStatus();
+  const balance = getWeeklyBalance();
 
-  // calc totals
-  let totalKcal = 0, totalProt = 0, filledCats = 0;
-  ration.meals.forEach(meal => {
-    Object.entries(meal).forEach(([catKey, sel]) => {
-      if (!sel) return;
-      const cat = CATEGORIES[catKey];
-      const item = cat.items[sel.itemIdx];
-      const mult = sel.portion === 'full' ? 1 : 0.5;
-      totalKcal += item.kcal * mult;
-      totalProt += item.prot * mult;
-      if (sel.portion === 'full') filledCats++;
-      else filledCats += 0.5;
+  // Ration summary
+  const ration = getTodayRation();
+  let filled = 0, total = 0;
+  MEALS.forEach(meal => {
+    const mSel = ration.meals[meal.id] || {};
+    meal.groups.filter(g => g.required).forEach(g => {
+      total++;
+      if (mSel[g.id]) filled++;
     });
   });
 
-  const kcalPct = Math.round(totalKcal / DAILY_KCAL_GOAL * 100);
-  const stepsPct = Math.round(steps / DAILY_STEPS_GOAL * 100);
-  const rationPct = Math.round(filledCats / TOTAL_CATEGORIES * 100);
-
-  const if_ = getIFStatus();
-  const ifColor = if_.inWindow ? 'var(--accent)' : 'var(--text3)';
-  const ifLabel = if_.inWindow ? '🟢 Вікно їжі відкрите' : '🔴 Голодування';
-  const ifNext = if_.inWindow
-    ? `Закриється через ${if_.hours}г ${if_.mins}хв`
-    : `Відкриється через ${if_.hours}г ${if_.mins}хв`;
+  const balanceText = balance > 50 ? `⚠️ Вчора +${balance} ккал → ліміт сьогодні ${goal}` :
+                      balance < -50 ? `✨ Вчора -${Math.abs(balance)} ккал → можна +${goal-DAILY_KCAL_GOAL+goal} ккал` : '';
 
   document.getElementById('home-content').innerHTML = `
-    <div class="card" style="cursor:pointer" onclick="showPage('if')">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    ${balanceText ? `<div class="card" style="border-color:var(--orange);font-size:12px;color:var(--orange)">${balanceText}</div>` : ''}
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-size:13px;color:var(--text2);margin-bottom:4px">⏱ Інтервальне голодування 16/8</div>
-          <div style="font-size:16px;font-weight:700;color:${ifColor}">${ifLabel}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">${ifNext}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Вікно: ${if_.startHour}:00 — ${if_.endHour}:00</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Калорії сьогодні</div>
+          <div style="font-size:38px;font-weight:800;color:${color}">${kcal}<span style="font-size:14px;font-weight:500;color:var(--text2)"> / ${goal}</span></div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">ккал · лишилось: ${Math.max(0, goal-kcal)}</div>
+          <div class="kcal-bar-wrap" style="width:200px;margin-top:10px"><div class="kcal-bar-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>
         </div>
-        ${ring(if_.inWindow ? if_.pct : 0, if_.inWindow ? 'var(--accent)' : 'var(--border)')}
+        ${ring(pct, color)}
+      </div>
+    </div>
+
+    <div class="card" onclick="showPage('ration')" style="cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Прийоми їжі</div>
+          <div style="font-size:28px;font-weight:800;color:var(--accent)">${filled}<span style="font-size:14px;color:var(--text2)"> / ${total} груп</span></div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Натисни щоб заповнити →</div>
+        </div>
+        ${ring(Math.round(filled/total*100), 'var(--accent)')}
       </div>
     </div>
 
     <div class="card">
-      <div class="ring-wrap">
-        <div class="ring-info">
-          <h3>Раціон сьогодні</h3>
-          <div class="big-num c-accent">${Math.round(totalKcal)}<span style="font-size:16px;font-weight:500"> ккал</span></div>
-          <div class="sub">Білок: ${Math.round(totalProt)} г &nbsp;·&nbsp; Ціль: ${DAILY_KCAL_GOAL} ккал</div>
-          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(kcalPct,100)}%"></div></div>
-        </div>
-        ${ring(kcalPct, 'var(--accent)')}
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="ring-wrap">
-        <div class="ring-info">
-          <h3>Кроки сьогодні</h3>
-          <div class="big-num c-accent2">${steps.toLocaleString('uk')}</div>
-          <div class="sub">Ціль: ${DAILY_STEPS_GOAL.toLocaleString('uk')} кроків</div>
-          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(stepsPct,100)}%;background:var(--accent2)"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Кроки сьогодні</div>
+          <div style="font-size:28px;font-weight:800;color:var(--accent2)">${steps.toLocaleString('uk')}</div>
+          <div style="font-size:12px;color:var(--text2)">Ціль: ${DAILY_STEPS_GOAL.toLocaleString('uk')}</div>
         </div>
         ${ring(stepsPct, 'var(--accent2)')}
       </div>
     </div>
 
-    <div class="card">
-      <div class="ring-wrap">
-        <div class="ring-info">
-          <h3>Порції заповнено</h3>
-          <div class="big-num c-orange">${Math.round(filledCats)}/${TOTAL_CATEGORIES}</div>
-          <div class="sub">категорій виконано</div>
-          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(rationPct,100)}%;background:var(--orange)"></div></div>
-        </div>
-        ${ring(rationPct, 'var(--orange)')}
+    <div class="card" onclick="showPage('if')" style="cursor:pointer">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">⏱ IF 16/8</div>
+      <div style="font-size:16px;font-weight:700;color:${if_.inWindow?'var(--accent)':'var(--text3)'}">
+        ${if_.inWindow ? '🟢 Їж зараз!' : '🔴 Голодування'}
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px">
+        ${if_.inWindow ? `Закриється через ${if_.hours}г ${if_.mins}хв` : `Відкриється через ${if_.hours}г ${if_.mins}хв`}
+        · Вікно: ${if_.startHour}:00–${if_.endHour}:00
       </div>
     </div>
   `;
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 // RENDER RATION
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderRation() {
-  const el = document.getElementById('ration-content');
+  const ration = getTodayRation();
+  const goal = getEffectiveGoal();
+  const totalKcal = getTodayKcal();
+  const color = kcalColor(totalKcal, goal);
+  const pct = Math.min(Math.round(totalKcal/goal*100), 100);
 
-  if (rationView === 'list') {
-    const ration = getTodayRation();
-    let html = `<div class="page-title">Раціон</div>`;
-
-    const mealNames = ['Сніданок', 'Обід', 'Перекус', 'Вечеря'];
-    for (let i = 0; i < 4; i++) {
-      const meal = ration.meals[i];
-      const cats = Object.keys(meal).filter(k => meal[k]);
-      let kcal = 0, prot = 0;
-      cats.forEach(k => {
-        const item = CATEGORIES[k].items[meal[k].itemIdx];
-        const m = meal[k].portion === 'full' ? 1 : 0.5;
-        kcal += item.kcal * m; prot += item.prot * m;
-      });
-      const summary = cats.length ? `${Math.round(kcal)} ккал · ${Math.round(prot)}г білка` : 'Порожньо';
-      html += `<div class="meal-row" onclick="openMeal(${i})">
-        <div class="meal-num">${i+1}</div>
-        <div class="meal-text">
-          <h4>${mealNames[i]}</h4>
-          <p>${summary}</p>
-        </div>
-        <span class="chevron">›</span>
-      </div>`;
-    }
-    el.innerHTML = html;
-
-  } else {
-    // meal detail
-    const ration = getTodayRation();
-    const meal = ration.meals[currentMeal];
-    const mealNames = ['Сніданок', 'Обід', 'Перекус', 'Вечеря'];
-
-    let searchHtml = `
-      <button class="back-btn" onclick="rationView='list';renderRation()">‹ Назад</button>
-      <div class="page-title">${mealNames[currentMeal]}</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;padding:10px 12px;background:var(--surface2);border-radius:10px;">
-        💡 1 клік — ½ порції &nbsp;·&nbsp; 2 кліки — повна порція &nbsp;·&nbsp; 3 кліки — скасувати
+  let html = `
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:700">Всього сьогодні</span>
+        <span style="font-size:18px;font-weight:800;color:${color}">${totalKcal} / ${goal} ккал</span>
       </div>
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input class="search-field" placeholder="Пошук інгредієнтів..." 
-          oninput="searchQuery=this.value;renderRation()" value="${searchQuery}">
-      </div>
-    `;
+      <div class="kcal-bar-wrap"><div class="kcal-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      ${totalKcal > goal ? `<div style="font-size:11px;color:var(--accent3);margin-top:6px">⚠️ Перевищення на ${totalKcal-goal} ккал</div>` : `<div style="font-size:11px;color:var(--text3);margin-top:6px">Лишилось: ${goal-totalKcal} ккал</div>`}
+    </div>
+  `;
 
-    // Calculate how many halves are used across ALL meals for each category
-    const catHalves = {};
-    ration.meals.forEach((m, mIdx) => {
-      Object.entries(m).forEach(([k, sel]) => {
-        if (!sel) return;
-        if (!catHalves[k]) catHalves[k] = 0;
-        catHalves[k] += sel.portion === 'full' ? 2 : 1;
-      });
+  // Render each meal
+  MEALS.forEach(meal => {
+    const mealSel = ration.meals[meal.id] || {};
+    let mealKcal = 0;
+    meal.groups.forEach(g => {
+      const sel = mealSel[g.id];
+      if (sel) {
+        const item = g.items[sel.idx];
+        if (item) mealKcal += item.kcal * (sel.portion==='full'?1:0.5);
+      }
     });
+    const isOpen = openMeal === meal.id;
 
-    let listHtml = '';
-    Object.entries(CATEGORIES).forEach(([catKey, cat]) => {
-      const filtered = cat.items.filter(item =>
-        !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      if (!filtered.length) return;
+    html += `<div class="meal-card">
+      <div class="meal-header" onclick="toggleMeal('${meal.id}')">
+        <div>
+          <div class="meal-title">${meal.icon} ${meal.name}</div>
+          <div class="meal-kcal">${Math.round(mealKcal)} / ~${meal.targetKcal} ккал</div>
+        </div>
+        <span style="color:var(--text3);font-size:20px">${isOpen?'↑':'↓'}</span>
+      </div>
+      <div class="meal-body ${isOpen?'open':''}">`;
 
-      listHtml += `<div class="section-title">${catKey} — ${cat.name}</div>`;
-      filtered.forEach((item) => {
-        const itemIdx = cat.items.indexOf(item);
-        const sel = meal[catKey];
-        const isSelected = sel && sel.itemIdx === itemIdx;
+    meal.groups.forEach(group => {
+      const sel = mealSel[group.id];
+      const remaining = goal - totalKcal + (sel ? (group.items[sel.idx]?.kcal||0)*(sel.portion==='full'?1:0.5) : 0);
+
+      html += `<div class="group-label">${group.icon} ${group.name}${!group.required?' <span class="optional-tag">необов\'язково</span>':''}</div>`;
+
+      group.items.forEach((item, idx) => {
+        const isSelected = sel && sel.idx === idx;
         const isFull = isSelected && sel.portion === 'full';
         const isHalf = isSelected && sel.portion === 'half';
+        const wouldExceed = !isSelected && (totalKcal + item.kcal) > goal * 1.1;
 
-        // Total halves used in this category across all meals
-        const totalHalves = catHalves[catKey] || 0;
-        // Is this category fully used (2 halves) and NOT in current meal?
-        const isBlocked = totalHalves >= 2 && !isSelected;
-        // Is half used in another meal (not current)?
-        const halfElsewhere = totalHalves >= 1 && !isSelected;
-
-        let clickHandler = isBlocked ? '' : `onclick="toggleItem('${catKey}', ${itemIdx})"`;
-        let extraClass = isFull ? 'selected' : isHalf ? 'half-selected' : '';
-        let opacity = isBlocked ? 'opacity:0.3;pointer-events:none;' : '';
-        let badge = '';
-        if (isFull) badge = '<div class="portion-badge">Повна порція</div>';
-        else if (isHalf) badge = '<div class="portion-badge half">½ порції</div>';
-        else if (halfElsewhere && !isSelected) badge = '<div class="portion-badge half">½ вже є</div>';
-
-        const siEmoji = item.si ? getSIEmoji(item.si) : '';
-        listHtml += `
-          <div class="food-item ${extraClass}" style="${opacity}" ${clickHandler}>
-            <div class="cat-badge" style="background:${cat.bg};color:${cat.color}">${catKey}</div>
-            <div class="food-info">
-              <div class="food-name">${item.name} ${siEmoji}</div>
-              <div class="food-meta">${item.weight}г · ${item.kcal} ккал · ${item.prot}г білка</div>
-            </div>
-            ${badge}
-          </div>`;
+        html += `<div class="food-item ${isFull?'selected':isHalf?'half':''}" onclick="toggleFood('${meal.id}','${group.id}',${idx})" style="${wouldExceed?'opacity:0.5':''}">
+          <div class="food-icon" style="background:${group.required?'rgba(200,240,96,0.1)':'rgba(128,128,128,0.1)'}">
+            ${group.icon}
+          </div>
+          <div class="food-info">
+            <div class="food-name">${item.name} ${siEmoji(item.si)}</div>
+            <div class="food-meta">${item.unit} · ${item.kcal} ккал · ${item.prot}г білка</div>
+          </div>
+          ${isFull ? '<span class="food-badge badge-full">Повна</span>' : ''}
+          ${isHalf ? '<span class="food-badge badge-half">½</span>' : ''}
+        </div>`;
       });
     });
 
-    el.innerHTML = searchHtml + listHtml;
-  }
+    html += `</div></div>`;
+  });
+
+  // Bonus
+  const bonusSel = ration.bonus;
+  html += `<div class="meal-card">
+    <div class="meal-header" onclick="toggleMeal('bonus')">
+      <div>
+        <div class="meal-title">✨ Будь-що (до 200 ккал)</div>
+        <div class="meal-kcal">${bonusSel ? (bonusSel==='full'?200:100) : 0} / 200 ккал</div>
+      </div>
+      <span style="color:var(--text3);font-size:20px">${openMeal==='bonus'?'↑':'↓'}</span>
+    </div>
+    <div class="meal-body ${openMeal==='bonus'?'open':''}">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Солодощі, снеки, алкоголь, ресторанна їжа тощо. Максимум 200 ккал.</div>
+      <div class="food-item ${bonusSel==='full'?'selected':bonusSel==='half'?'half':''}" onclick="toggleBonus()">
+        <div class="food-icon" style="background:rgba(240,160,96,0.1)">✨</div>
+        <div class="food-info">
+          <div class="food-name">Будь-що на вибір</div>
+          <div class="food-meta">до 200 ккал · 1 клік = 100 ккал, 2 кліки = 200 ккал</div>
+        </div>
+        ${bonusSel==='full' ? '<span class="food-badge badge-full">200 ккал</span>' : ''}
+        ${bonusSel==='half' ? '<span class="food-badge badge-half">100 ккал</span>' : ''}
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('ration-content').innerHTML = html;
 }
 
-function openMeal(idx) {
-  currentMeal = idx;
-  rationView = 'meal';
-  searchQuery = '';
+function toggleMeal(id) {
+  openMeal = openMeal === id ? null : id;
   renderRation();
 }
 
-function toggleItem(catKey, itemIdx) {
+function toggleFood(mealId, groupId, idx) {
   const ration = getTodayRation();
-  const meal = ration.meals[currentMeal];
-  const cur = meal[catKey];
+  if (!ration.meals[mealId]) ration.meals[mealId] = {};
+  const cur = ration.meals[mealId][groupId];
 
-  // Count total halves across ALL meals for this category
-  let totalHalves = 0;
-  ration.meals.forEach((m, idx) => {
-    if (m[catKey]) totalHalves += m[catKey].portion === 'full' ? 2 : 1;
-  });
-  // Subtract current meal's contribution
-  if (cur) totalHalves -= cur.portion === 'full' ? 2 : 1;
-
-  if (!cur || cur.itemIdx !== itemIdx) {
-    // Only add if total (excluding current) < 2
-    if (totalHalves >= 2) return;
-    meal[catKey] = { itemIdx, portion: 'half' };
+  if (!cur || cur.idx !== idx) {
+    ration.meals[mealId][groupId] = { idx, portion: 'half' };
   } else if (cur.portion === 'half') {
-    // Upgrade to full only if no halves elsewhere
-    if (totalHalves === 0) {
-      meal[catKey] = { itemIdx, portion: 'full' };
-    } else {
-      // Already a half elsewhere — remove from current meal
-      delete meal[catKey];
-    }
+    ration.meals[mealId][groupId] = { idx, portion: 'full' };
   } else {
-    delete meal[catKey];
+    delete ration.meals[mealId][groupId];
   }
 
   saveTodayRation(ration);
   renderRation();
   renderHome();
+  showToast('✅ Збережено');
 }
 
-// ═══════════════════════════════════════════════
+function toggleBonus() {
+  const ration = getTodayRation();
+  if (!ration.bonus) ration.bonus = 'half';
+  else if (ration.bonus === 'half') ration.bonus = 'full';
+  else ration.bonus = null;
+  saveTodayRation(ration);
+  renderRation();
+  renderHome();
+}
+
+// ═══════════════════════════════════════════
 // RENDER STEPS
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderSteps() {
   const steps = getTodaySteps();
-  const pct = Math.round(steps / DAILY_STEPS_GOAL * 100);
+  const pct = Math.round(steps/DAILY_STEPS_GOAL*100);
   const s = getState();
-  const stepsHistory = s.steps || {};
-  const entries = Object.entries(stepsHistory).sort((a,b) => b[0].localeCompare(a[0])).slice(0,7);
+  const entries = Object.entries(s.steps||{}).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,7);
 
   document.getElementById('steps-content').innerHTML = `
-    <div class="card" style="text-align:center;padding:30px 18px">
-      <div style="display:flex;justify-content:center;margin-bottom:16px">
-        ${ring(pct, 'var(--accent2)', 100)}
-      </div>
-      <div class="steps-big c-accent2">${steps.toLocaleString('uk')}</div>
-      <div class="steps-goal">Ціль: ${DAILY_STEPS_GOAL.toLocaleString('uk')} кроків</div>
+    <div class="card" style="text-align:center;padding:28px">
+      <div style="display:flex;justify-content:center;margin-bottom:14px">${ring(pct,'var(--accent2)',100)}</div>
+      <div style="font-size:48px;font-weight:800;color:var(--accent2)">${steps.toLocaleString('uk')}</div>
+      <div style="font-size:13px;color:var(--text2)">Ціль: ${DAILY_STEPS_GOAL.toLocaleString('uk')} кроків</div>
     </div>
-
-    <div class="input-wrap">
-      <div class="input-label">Кроки сьогодні</div>
-      <input class="input-field" type="number" id="steps-input" placeholder="Введи кількість кроків" value="${steps || ''}">
-    </div>
+    <div style="margin-bottom:8px"><div style="font-size:12px;color:var(--text2);margin-bottom:6px">Кроки сьогодні</div>
+    <input class="input-field" type="number" id="steps-input" placeholder="Введи кількість" value="${steps||''}"></div>
     <button class="btn btn-primary" onclick="saveSteps()">Зберегти</button>
-
-    ${entries.length > 1 ? `
-      <div class="section-title">Останні 7 днів</div>
-      <div class="card">
-        ${entries.map(([date, val]) => `
-          <div class="hist-row">
-            <span class="hist-date">${date}</span>
-            <span class="hist-val c-accent2">${Number(val).toLocaleString('uk')}</span>
-          </div>`).join('')}
-      </div>` : ''}
+    ${entries.length>1?`<div style="margin-top:16px;font-size:12px;color:var(--text2);margin-bottom:8px">Останні дні</div><div class="card">${entries.map(([d,v])=>`<div class="hist-row"><span style="color:var(--text2)">${d}</span><span style="font-weight:700;color:var(--accent2)">${Number(v).toLocaleString('uk')}</span></div>`).join('')}</div>`:''}
   `;
 }
 
 function saveSteps() {
-  const val = parseInt(document.getElementById('steps-input').value);
-  if (isNaN(val) || val < 0) { showToast('Введи коректне число'); return; }
-  saveTodaySteps(val);
+  const v = parseInt(document.getElementById('steps-input').value);
+  if (isNaN(v)||v<0) { showToast('Введи коректне число'); return; }
+  saveTodaySteps(v);
   showToast('🚶 Кроки збережено!');
-  renderSteps();
-  renderHome();
+  renderSteps(); renderHome();
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 // RENDER MEASURES
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderMeasures() {
   const el = document.getElementById('measures-content');
-  const allMeasures = getMeasures();
+  const all = getMeasures();
 
   if (measureView === 'list') {
-    let html = '';
-    MEASURES.forEach(m => {
-      const entries = allMeasures[m.key] || [];
-      const last = entries[entries.length - 1];
-      html += `<div class="measure-row" onclick="openMeasure('${m.key}')">
-        <div class="measure-left">
-          <span class="measure-icon">${m.icon}</span>
-          <span class="measure-name">${m.name}</span>
+    el.innerHTML = MEASURES.map(m => {
+      const entries = all[m.key]||[];
+      const last = entries[entries.length-1];
+      return `<div class="measure-row" onclick="openMeasureFn('${m.key}')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:22px">${m.icon}</span>
+          <span style="font-size:14px;font-weight:600">${m.name}</span>
         </div>
-        <span class="measure-val">${last ? last.val + ' ' + m.unit : '—'} ›</span>
+        <span style="font-weight:700;color:var(--text2)">${last?last.val+' '+m.unit:'—'} ›</span>
       </div>`;
-    });
-    el.innerHTML = html;
-
-  } else if (measureView === 'entry') {
-    const m = MEASURES.find(x => x.key === currentMeasureKey);
-    const entries = (getMeasures()[currentMeasureKey] || []).slice(-5).reverse();
+    }).join('');
+  } else {
+    const m = MEASURES.find(x=>x.key===currentMeasureKey);
+    const entries = (getMeasures()[currentMeasureKey]||[]).slice(-5).reverse();
     el.innerHTML = `
-      <button class="back-btn" onclick="measureView='list';renderMeasures()">‹ Назад</button>
+      <button style="background:none;border:none;color:var(--text2);font-family:Manrope;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:14px" onclick="measureView='list';renderMeasures()">‹ Назад</button>
       <div class="page-title">${m.icon} ${m.name}</div>
-      <div class="input-wrap">
-        <div class="input-label">Нове значення (${m.unit})</div>
-        <input class="input-field" type="number" step="0.1" id="measure-input" placeholder="Наприклад: ${m.key === 'weight' ? '65.5' : '38'}">
-      </div>
-      <button class="btn btn-primary" onclick="saveMeasure()">Зберегти</button>
-      ${entries.length ? `
-        <div class="section-title">Історія</div>
-        <div class="card">
-          ${entries.map(e => `
-            <div class="hist-row">
-              <span class="hist-date">${e.date}</span>
-              <span class="hist-val">${e.val} ${m.unit}</span>
-            </div>`).join('')}
-        </div>` : ''}
+      <div style="margin-bottom:8px"><div style="font-size:12px;color:var(--text2);margin-bottom:6px">Нове значення (${m.unit})</div>
+      <input class="input-field" type="number" step="0.1" id="measure-input" placeholder="${m.key==='weight'?'65.5':'38'}"></div>
+      <button class="btn btn-primary" onclick="saveMeasureFn()">Зберегти</button>
+      ${entries.length?`<div style="margin-top:16px" class="card">${entries.map(e=>`<div class="hist-row"><span style="color:var(--text2)">${e.date}</span><span style="font-weight:700">${e.val} ${m.unit}</span></div>`).join('')}</div>`:''}
     `;
   }
 }
 
-function openMeasure(key) {
-  currentMeasureKey = key;
-  measureView = 'entry';
-  renderMeasures();
+function openMeasureFn(key) { currentMeasureKey=key; measureView='entry'; renderMeasures(); }
+function saveMeasureFn() {
+  const v = parseFloat(document.getElementById('measure-input').value);
+  if (isNaN(v)||v<=0) { showToast('Введи коректне значення'); return; }
+  saveMeasureEntry(currentMeasureKey, v);
+  const m = MEASURES.find(x=>x.key===currentMeasureKey);
+  showToast(`${m.icon} ${v} ${m.unit} збережено!`);
+  measureView='list'; renderMeasures();
 }
 
-function saveMeasure() {
-  const val = parseFloat(document.getElementById('measure-input').value);
-  if (isNaN(val) || val <= 0) { showToast('Введи коректне значення'); return; }
-  saveMeasureEntry(currentMeasureKey, val);
-  const m = MEASURES.find(x => x.key === currentMeasureKey);
-  showToast(`${m.icon} ${m.name}: ${val} ${m.unit} збережено!`);
-  measureView = 'list';
-  renderMeasures();
-}
-
-// ═══════════════════════════════════════════════
-// RENDER IF
-// ═══════════════════════════════════════════════
-function renderIF() {
-  const s = getState();
-  const startHour = s.ifStart !== undefined ? s.ifStart : 12;
-  const endHour = startHour + 8;
-  const if_ = getIFStatus();
-
-  // Big ring
-  const pct = if_.inWindow ? if_.pct : 0;
-  const bigRing = ring(pct, if_.inWindow ? 'var(--accent)' : 'var(--border)', 120);
-
-  document.getElementById('if-content').innerHTML = `
-    <div class="card" style="text-align:center;padding:24px">
-      <div style="display:flex;justify-content:center;margin-bottom:16px">${bigRing}</div>
-      <div style="font-size:20px;font-weight:800;color:${if_.inWindow ? 'var(--accent)' : 'var(--text2)'}">
-        ${if_.inWindow ? '🟢 Їж зараз!' : '🔴 Голодування'}
-      </div>
-      <div style="font-size:14px;color:var(--text2);margin-top:8px">
-        ${if_.inWindow ? `Вікно закриється через ${if_.hours}г ${if_.mins}хв` : `Вікно відкриється через ${if_.hours}г ${if_.mins}хв`}
-      </div>
-      <div style="font-size:13px;color:var(--text3);margin-top:6px">
-        Вікно їжі: ${startHour}:00 — ${endHour}:00
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600">Налаштування вікна їжі</div>
-      <div class="input-label">Початок вікна їжі (година)</div>
-      <input class="input-field" type="number" id="if-start" min="6" max="16" value="${startHour}" placeholder="12">
-      <div style="font-size:11px;color:var(--text3);margin-top:6px;margin-bottom:12px">
-        Вікно їжі: з ${startHour}:00 до ${endHour}:00 (8 годин)
-      </div>
-      <button class="btn btn-primary" onclick="saveIFSettings()">Зберегти</button>
-    </div>
-
-    <div class="card">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600">💡 Поради для IF 16/8</div>
-      <div style="font-size:13px;color:var(--text3);line-height:1.6">
-        • Під час голодування можна пити воду, чай, каву без цукру<br>
-        • Перший прийом їжі — найкраще збалансований (білок + овочі)<br>
-        • Уникай калорійних страв ближче до кінця вікна<br>
-        • Тренування добре робити за 1-2 години до вікна або на початку<br>
-        • При -10 кг за 3 місяці орієнтуйся на ~1200-1400 ккал на день
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:8px;font-weight:600">🎯 Твоя ціль</div>
-      <div style="font-size:32px;font-weight:800;color:var(--accent)">-10 кг</div>
-      <div style="font-size:12px;color:var(--text3);margin-top:4px">за 3 місяці · ~-0.8 кг/тиждень</div>
-      <div style="margin-top:12px;font-size:13px;color:var(--text3)">
-        Безпечний темп: 0.5-1 кг на тиждень ✅
-      </div>
-    </div>
-  `;
-}
-
-function saveIFSettings() {
-  const val = parseInt(document.getElementById('if-start').value);
-  if (isNaN(val) || val < 6 || val > 16) {
-    showToast('Введи годину від 6 до 16');
-    return;
-  }
-  const s = getState();
-  s.ifStart = val;
-  saveState(s);
-  showToast(`✅ Вікно їжі: ${val}:00 — ${val+8}:00`);
-  renderIF();
-  renderHome();
-}
-
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 // RENDER ANALYTICS
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderAnalytics() {
   const s = getState();
   const today = new Date();
-
-  // Last 7 days
-  const week = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    week.push(d.toISOString().slice(0, 10));
-  }
+  const week = Array.from({length:7},(_,i)=>{ const d=new Date(today); d.setDate(d.getDate()-6+i); return d.toISOString().slice(0,10); });
 
   // Streak
-  let streak = 0;
-  let check = new Date(today);
-  while (true) {
-    const key = check.toISOString().slice(0, 10);
-    const hasRation = s.rations && s.rations[key] &&
-      s.rations[key].meals.some(m => Object.keys(m).length > 0);
-    const hasSteps = s.steps && s.steps[key];
-    if (!hasRation && !hasSteps) break;
-    streak++;
-    check.setDate(check.getDate() - 1);
+  let streak=0, check=new Date(today);
+  while(true) {
+    const k=check.toISOString().slice(0,10);
+    if(s.rations&&s.rations[k]&&calcRationKcal(s.rations[k])>200) streak++;
+    else break;
+    check.setDate(check.getDate()-1);
   }
 
-  // Weekly steps
-  const stepsData = week.map(d => (s.steps && s.steps[d]) || 0);
-  const totalSteps = stepsData.reduce((a, b) => a + b, 0);
-  const avgSteps = Math.round(totalSteps / 7);
+  // Steps
+  const stepsData = week.map(d=>(s.steps&&s.steps[d])||0);
+  const avgSteps = Math.round(stepsData.reduce((a,b)=>a+b,0)/7);
 
-  // Weekly kcal
-  const kcalData = week.map(d => {
-    if (!s.rations || !s.rations[d]) return 0;
-    let kcal = 0;
-    s.rations[d].meals.forEach(meal => {
-      Object.entries(meal).forEach(([catKey, sel]) => {
-        if (!sel) return;
-        const item = CATEGORIES[catKey].items[sel.itemIdx];
-        kcal += item.kcal * (sel.portion === 'full' ? 1 : 0.5);
-      });
-    });
-    return Math.round(kcal);
-  });
-  const avgKcal = Math.round(kcalData.reduce((a, b) => a + b, 0) / 7);
+  // Kcal
+  const kcalData = week.map(d=>s.rations&&s.rations[d]?calcRationKcal(s.rations[d]):0);
+  const avgKcal = Math.round(kcalData.reduce((a,b)=>a+b,0)/7);
 
-  // Weight history
-  const weightEntries = (s.measures && s.measures.weight) || [];
-  const lastWeight = weightEntries[weightEntries.length - 1];
-  const firstWeight = weightEntries[0];
-  const weightDiff = lastWeight && firstWeight ?
-    (lastWeight.val - firstWeight.val).toFixed(1) : null;
+  // Weekly balance
+  const balance = getWeeklyBalance();
 
-  // Mini bar chart for steps
-  const maxSteps = Math.max(...stepsData, DAILY_STEPS_GOAL);
-  const stepsChart = stepsData.map((v, i) => {
-    const h = Math.round((v / maxSteps) * 60);
-    const isToday = i === 6;
-    const achieved = v >= DAILY_STEPS_GOAL;
-    const color = achieved ? 'var(--accent2)' : isToday ? 'var(--accent)' : 'var(--border)';
-    const day = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'][new Date(week[i]).getDay() === 0 ? 6 : new Date(week[i]).getDay() - 1];
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-      <div style="font-size:9px;color:var(--text3)">${v > 0 ? (v/1000).toFixed(1)+'к' : ''}</div>
-      <div style="width:100%;height:${Math.max(h,4)}px;background:${color};border-radius:4px;transition:height .3s"></div>
-      <div style="font-size:10px;color:${isToday ? 'var(--accent)' : 'var(--text3)'};font-weight:${isToday ? 700 : 400}">${day}</div>
-    </div>`;
-  }).join('');
+  const days = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+  function miniBar(data, goal, color) {
+    const max = Math.max(...data, goal);
+    return data.map((v,i)=>{
+      const h = Math.round((v/max)*60);
+      const isToday = i===6;
+      const c = v>=goal ? color : isToday ? 'var(--orange)' : 'var(--border)';
+      const dayIdx = new Date(week[i]).getDay();
+      const dayName = days[dayIdx===0?6:dayIdx-1];
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+        <div style="font-size:9px;color:var(--text3)">${v>0?(v>999?Math.round(v/1000)+'к':v):''}</div>
+        <div style="width:100%;height:${Math.max(h,4)}px;background:${c};border-radius:3px"></div>
+        <div style="font-size:9px;color:${isToday?color:'var(--text3)'};font-weight:${isToday?700:400}">${dayName}</div>
+      </div>`;
+    }).join('');
+  }
 
-  // Kcal chart
-  const maxKcal = Math.max(...kcalData, DAILY_KCAL_GOAL);
-  const kcalChart = kcalData.map((v, i) => {
-    const h = Math.round((v / maxKcal) * 60);
-    const isToday = i === 6;
-    const achieved = v >= DAILY_KCAL_GOAL * 0.8;
-    const color = achieved ? 'var(--accent)' : isToday ? 'var(--orange)' : 'var(--border)';
-    const day = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'][new Date(week[i]).getDay() === 0 ? 6 : new Date(week[i]).getDay() - 1];
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-      <div style="font-size:9px;color:var(--text3)">${v > 0 ? v : ''}</div>
-      <div style="width:100%;height:${Math.max(h,4)}px;background:${color};border-radius:4px;transition:height .3s"></div>
-      <div style="font-size:10px;color:${isToday ? 'var(--accent)' : 'var(--text3)'};font-weight:${isToday ? 700 : 400}">${day}</div>
-    </div>`;
-  }).join('');
+  // Weight
+  const weightEntries = (s.measures&&s.measures.weight)||[];
+  const lastW = weightEntries[weightEntries.length-1];
+  const firstW = weightEntries[0];
+  const diff = lastW&&firstW ? (lastW.val-firstW.val).toFixed(1) : null;
 
   document.getElementById('analytics-content').innerHTML = `
     <div class="card">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">🔥 Стрік</div>
-      <div style="font-size:42px;font-weight:800;color:var(--orange)">${streak} <span style="font-size:16px;font-weight:500">днів</span></div>
-      <div style="font-size:12px;color:var(--text3);margin-top:4px">поспіль з активністю</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">🔥 Стрік</div>
+      <div style="font-size:36px;font-weight:800;color:var(--orange)">${streak} <span style="font-size:14px;font-weight:500">днів</span></div>
     </div>
 
     <div class="card">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:4px">🚶 Кроки — тиждень</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Сер: ${avgSteps.toLocaleString('uk')} · Всього: ${totalSteps.toLocaleString('uk')}</div>
-      <div style="display:flex;align-items:flex-end;gap:4px;height:80px;padding-top:16px">
-        ${stepsChart}
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px">📊 Тижневий баланс</div>
+      <div style="font-size:22px;font-weight:800;color:${balance>50?'var(--accent3)':balance<-50?'var(--accent)':'var(--text2)'}">
+        ${balance>0?'+':''}${balance} ккал/день
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">
+        ${balance>50?`Ліміт скориговано до ${getEffectiveGoal()} ккал`:balance<-50?'Молодець! Є запас':' В нормі'}
       </div>
     </div>
 
     <div class="card">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:4px">🍽 Калорії — тиждень</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Сер: ${avgKcal} ккал · Ціль: ${DAILY_KCAL_GOAL} ккал</div>
-      <div style="display:flex;align-items:flex-end;gap:4px;height:80px;padding-top:16px">
-        ${kcalChart}
-      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px">🍽 Калорії — тиждень</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Сер: ${avgKcal} ккал · Ціль: ${DAILY_KCAL_GOAL}</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:80px;padding-top:16px">${miniBar(kcalData,DAILY_KCAL_GOAL,'var(--accent)')}</div>
     </div>
 
-    ${weightEntries.length >= 2 ? `
     <div class="card">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">⚖️ Динаміка ваги</div>
-      <div style="font-size:32px;font-weight:800;color:${weightDiff <= 0 ? 'var(--accent)' : 'var(--accent3)'}">
-        ${weightDiff > 0 ? '+' : ''}${weightDiff} кг
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px">🚶 Кроки — тиждень</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Сер: ${avgSteps.toLocaleString('uk')}</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:80px;padding-top:16px">${miniBar(stepsData,DAILY_STEPS_GOAL,'var(--accent2)')}</div>
+    </div>
+
+    ${diff!==null?`<div class="card">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">⚖️ Динаміка ваги</div>
+      <div style="font-size:28px;font-weight:800;color:${parseFloat(diff)<=0?'var(--accent)':'var(--accent3)'}">
+        ${parseFloat(diff)>0?'+':''}${diff} кг
       </div>
-      <div style="font-size:12px;color:var(--text3);margin-top:4px">
-        з ${firstWeight.val} кг → ${lastWeight.val} кг
-      </div>
-      <div style="margin-top:12px">
-        ${weightEntries.slice(-7).map(e => `
-          <div class="hist-row">
-            <span class="hist-date">${e.date}</span>
-            <span class="hist-val">${e.val} кг</span>
-          </div>`).join('')}
-      </div>
-    </div>` : `
-    <div class="card" style="text-align:center;padding:24px">
-      <div style="font-size:32px;margin-bottom:8px">⚖️</div>
-      <div style="color:var(--text3);font-size:13px">Додай хоча б 2 записи ваги щоб побачити динаміку</div>
-    </div>`}
+      <div style="font-size:12px;color:var(--text3)">${firstW.val} кг → ${lastW.val} кг</div>
+    </div>`:`<div class="card" style="text-align:center;color:var(--text3);font-size:13px;padding:20px">Додай 2+ записи ваги щоб бачити динаміку ⚖️</div>`}
   `;
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// RENDER IF
+// ═══════════════════════════════════════════
+function renderIF() {
+  const s = getState();
+  const startHour = s.ifStart!==undefined?s.ifStart:12;
+  const if_ = getIFStatus();
+
+  document.getElementById('if-content').innerHTML = `
+    <div class="card" style="text-align:center;padding:24px">
+      <div style="display:flex;justify-content:center;margin-bottom:14px">${ring(if_.inWindow?if_.pct:0,if_.inWindow?'var(--accent)':'var(--border)',110)}</div>
+      <div style="font-size:20px;font-weight:800;color:${if_.inWindow?'var(--accent)':'var(--text2)'}">
+        ${if_.inWindow?'🟢 Їж зараз!':'🔴 Голодування'}
+      </div>
+      <div style="font-size:13px;color:var(--text2);margin-top:8px">
+        ${if_.inWindow?`Закриється через ${if_.hours}г ${if_.mins}хв`:`Відкриється через ${if_.hours}г ${if_.mins}хв`}
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">Вікно: ${if_.startHour}:00 — ${if_.endHour}:00</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Налаштування</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">Початок вікна їжі (година)</div>
+      <input class="input-field" type="number" id="if-start" min="6" max="16" value="${startHour}">
+      <div style="font-size:11px;color:var(--text3);margin:6px 0 12px">Вікно: ${startHour}:00 — ${startHour+8}:00 (8 годин)</div>
+      <button class="btn btn-primary" onclick="saveIF()">Зберегти</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💡 Поради</div>
+      <div style="font-size:13px;color:var(--text3);line-height:1.7">
+        • Під час голодування — вода, чай, кава без цукру ✅<br>
+        • Перший прийом їжі: білок + клітковина<br>
+        • Останній прийом за 1-2 год до закриття вікна<br>
+        • При цілі -10 кг: 1200-1300 ккал в день<br>
+        • Тренування краще на початку вікна або за 1г до
+      </div>
+    </div>
+  `;
+}
+
+function saveIF() {
+  const v = parseInt(document.getElementById('if-start').value);
+  if(isNaN(v)||v<6||v>16){showToast('Введи від 6 до 16');return;}
+  const s=getState(); s.ifStart=v; saveState(s);
+  showToast(`✅ Вікно: ${v}:00–${v+8}:00`);
+  renderIF(); renderHome();
+}
+
+// ═══════════════════════════════════════════
 // MAIN RENDER
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function render() {
-  if (currentPage === 'home') renderHome();
-  else if (currentPage === 'ration') renderRation();
-  else if (currentPage === 'steps') renderSteps();
-  else if (currentPage === 'measures') renderMeasures();
-  else if (currentPage === 'analytics') renderAnalytics();
-  else if (currentPage === 'if') renderIF();
+  if (currentPage==='home') renderHome();
+  else if (currentPage==='ration') renderRation();
+  else if (currentPage==='steps') renderSteps();
+  else if (currentPage==='measures') renderMeasures();
+  else if (currentPage==='analytics') renderAnalytics();
+  else if (currentPage==='if') renderIF();
 }
 
-// Auto-refresh home every minute for IF timer
-setInterval(() => { if (currentPage === 'home' || currentPage === 'if') render(); }, 60000);
-
-// Init Telegram Web App
-if (window.Telegram && window.Telegram.WebApp) {
-  Telegram.WebApp.ready();
-  Telegram.WebApp.expand();
-}
-
+if (window.Telegram&&window.Telegram.WebApp) { Telegram.WebApp.ready(); Telegram.WebApp.expand(); }
+setInterval(()=>{ if(currentPage==='home'||currentPage==='if') render(); }, 60000);
 render();
 </script>
 </body>
