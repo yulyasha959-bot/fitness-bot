@@ -327,10 +327,13 @@ function calcRationKcal(ration) {
     const mealSel = ration.meals[meal.id] || {};
     meal.groups.forEach(group => {
       const sel = mealSel[group.id];
-      if (sel) {
-        const item = group.items[sel.idx];
-        if (item) total += item.kcal * (sel.portion === 'full' ? 1 : 0.5);
-      }
+      if (!sel) return;
+      // sel може бути масивом (дві половини) або об'єктом (одна порція)
+      const items = Array.isArray(sel) ? sel : [sel];
+      items.forEach(s => {
+        const item = group.items[s.idx];
+        if (item) total += item.kcal * (s.portion === 'full' ? 1 : 0.5);
+      });
     });
   });
   if (ration.bonus) {
@@ -517,10 +520,12 @@ function renderRation() {
     let mealKcal = 0;
     meal.groups.forEach(g => {
       const sel = mealSel[g.id];
-      if (sel) {
-        const item = g.items[sel.idx];
-        if (item) mealKcal += item.kcal * (sel.portion==='full'?1:0.5);
-      }
+      if (!sel) return;
+      const items = Array.isArray(sel) ? sel : [sel];
+      items.forEach(s => {
+        const item = g.items[s.idx];
+        if (item) mealKcal += item.kcal * (s.portion==='full'?1:0.5);
+      });
     });
     const isOpen = openMeal === meal.id;
 
@@ -536,17 +541,25 @@ function renderRation() {
 
     meal.groups.forEach(group => {
       const sel = mealSel[group.id];
-      const remaining = goal - totalKcal + (sel ? (group.items[sel.idx]?.kcal||0)*(sel.portion==='full'?1:0.5) : 0);
+      const gState = getGroupState(sel);
 
-      html += `<div class="group-label">${group.icon} ${group.name}${!group.required?' <span class="optional-tag">необов\'язково</span>':''}</div>`;
+      html += `<div class="group-label">${group.icon} ${group.name}${!group.required?' <span class="optional-tag">необов\'язково</span>':''}`;
+      // Показуємо статус групи якщо є два продукти
+      if (gState.halves.length === 2) {
+        html += ` <span style="font-size:10px;color:var(--accent);background:rgba(200,240,96,0.15);padding:2px 6px;border-radius:4px">½+½ = 1 порція ✓</span>`;
+      }
+      html += `</div>`;
 
       group.items.forEach((item, idx) => {
-        const isSelected = sel && sel.idx === idx;
-        const isFull = isSelected && sel.portion === 'full';
-        const isHalf = isSelected && sel.portion === 'half';
-        const wouldExceed = !isSelected && (totalKcal + item.kcal) > goal * 1.1;
+        const halfEntry = gState.halves.find(h => h.idx === idx);
+        const isFull = halfEntry && halfEntry.portion === 'full';
+        const isHalf = halfEntry && halfEntry.portion === 'half';
+        const isSelected = isFull || isHalf;
+        // Блокуємо вибір якщо група заповнена і цей продукт не вибраний
+        const isLocked = gState.locked && !isSelected;
+        const wouldExceed = !isSelected && !isLocked && (totalKcal + item.kcal * 0.5) > goal * 1.15;
 
-        html += `<div class="food-item ${isFull?'selected':isHalf?'half':''}" onclick="toggleFood('${meal.id}','${group.id}',${idx})" style="${wouldExceed?'opacity:0.5':''}">
+        html += `<div class="food-item ${isFull?'selected':isHalf?'half':''}" onclick="${isLocked?'showToast(\'Група заповнена\')':'toggleFood(\''+meal.id+'\',\''+group.id+'\','+idx+')'}" style="${isLocked?'opacity:0.35;cursor:not-allowed':wouldExceed?'opacity:0.5':''}">
           <div class="food-icon" style="background:${group.required?'rgba(200,240,96,0.1)':'rgba(128,128,128,0.1)'}">
             ${group.icon}
           </div>
@@ -595,17 +608,57 @@ function toggleMeal(id) {
   renderRation();
 }
 
+function getGroupState(sel) {
+  // Повертає { locked, halves: [{idx, portion}] }
+  // locked = true якщо група вже заповнена (повна порція або дві половини)
+  if (!sel) return { locked: false, halves: [] };
+  const items = Array.isArray(sel) ? sel : [sel];
+  const isFull = items.length === 1 && items[0].portion === 'full';
+  const isTwoHalves = items.length === 2;
+  return { locked: isFull || isTwoHalves, halves: items, isFull };
+}
+
 function toggleFood(mealId, groupId, idx) {
   const ration = getTodayRation();
   if (!ration.meals[mealId]) ration.meals[mealId] = {};
   const cur = ration.meals[mealId][groupId];
+  const state = getGroupState(cur);
 
-  if (!cur || cur.idx !== idx) {
-    ration.meals[mealId][groupId] = { idx, portion: 'half' };
-  } else if (cur.portion === 'half') {
-    ration.meals[mealId][groupId] = { idx, portion: 'full' };
+  // Перевіряємо чи цей продукт вже вибраний
+  const existingIdx = state.halves.findIndex(h => h.idx === idx);
+
+  if (existingIdx !== -1) {
+    // Продукт вже вибраний — обробляємо кліки
+    const existing = state.halves[existingIdx];
+    if (existing.portion === 'half') {
+      if (state.halves.length === 1) {
+        // Одна ½ → повна порція
+        ration.meals[mealId][groupId] = { idx, portion: 'full' };
+      } else {
+        // Два продукти, клік на один з них → видаляємо його
+        const other = state.halves.find(h => h.idx !== idx);
+        ration.meals[mealId][groupId] = { idx: other.idx, portion: 'half' };
+      }
+    } else {
+      // Повна порція → видалити
+      delete ration.meals[mealId][groupId];
+    }
   } else {
-    delete ration.meals[mealId][groupId];
+    // Новий продукт
+    if (state.locked) {
+      showToast('Група вже заповнена. Скасуй вибір щоб змінити.');
+      return;
+    }
+    if (state.halves.length === 1 && state.halves[0].portion === 'half') {
+      // Вже є одна ½ — додаємо другу ½ (дві різні страви = 1 порція)
+      ration.meals[mealId][groupId] = [
+        state.halves[0],
+        { idx, portion: 'half' }
+      ];
+    } else {
+      // Порожня група — починаємо з ½
+      ration.meals[mealId][groupId] = { idx, portion: 'half' };
+    }
   }
 
   saveTodayRation(ration);

@@ -7,13 +7,12 @@ from telegram.ext import (
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime, time
 import gspread
+import pytz
 
 TOKEN = "8921021336:AAF2agrxCts1tXaRl8p1FWojyjEaXWZrBQ0"
 MINI_APP_URL = "https://yulyasha959-bot.github.io/fitness-bot/"
 
-# IF settings: window 12:00-20:00
-IF_START = time(12, 0)
-IF_END   = time(20, 0)
+KYIV = pytz.timezone('Europe/Kiev')
 
 scope = [
     "https://spreadsheets.google.com/feeds",
@@ -100,16 +99,17 @@ def setup_reminders(context, chat_id):
     for job in context.job_queue.get_jobs_by_name(f"r_{chat_id}"):
         job.schedule_removal()
 
+    # Всі часи вказані за Kyiv (UTC+3) — pytz автоматично конвертує в UTC для Railway
     jobs = [
-        (time(12, 0),  remind_open_window,  "відкриття вікна"),
-        (time(12, 0),  remind_meal_1,        "прийом 1"),
-        (time(14, 30), remind_water,          "вода 1"),
-        (time(15, 0),  remind_meal_2,         "прийом 2"),
-        (time(17, 0),  remind_water,          "вода 2"),
-        (time(18, 0),  remind_meal_3,         "прийом 3"),
-        (time(19, 30), remind_close_window,   "закриття вікна"),
-        (time(20, 0),  remind_evening,        "вікно закрито"),
-        (time(21, 30), remind_water,          "вода 3"),
+        (time(12, 0,  tzinfo=KYIV), remind_open_window,  "відкриття вікна"),
+        (time(12, 0,  tzinfo=KYIV), remind_meal_1,        "прийом 1"),
+        (time(14, 30, tzinfo=KYIV), remind_water,          "вода 1"),
+        (time(15, 0,  tzinfo=KYIV), remind_meal_2,         "прийом 2"),
+        (time(17, 0,  tzinfo=KYIV), remind_water,          "вода 2"),
+        (time(18, 0,  tzinfo=KYIV), remind_meal_3,         "прийом 3"),
+        (time(19, 30, tzinfo=KYIV), remind_close_window,   "закриття вікна"),
+        (time(20, 0,  tzinfo=KYIV), remind_evening,        "вікно закрито"),
+        (time(21, 30, tzinfo=KYIV), remind_water,          "вода 3"),
     ]
 
     for t, callback, name in jobs:
